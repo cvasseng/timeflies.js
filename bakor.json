@@ -1,0 +1,17 @@
+{
+  "name": "timeline.js",
+  "outputDir": "./build",
+  "dependencies":[],
+  "js":[
+    "src/tl.js",
+    "src/tl.events.js",
+    "src/tl.mover.js",
+    "src/tl.resizer.js",
+    "src/tl.dnd.js",
+    "src/tl.timeline.js"
+  ],
+  "css":[],
+  "less":[
+    "less/light.less"
+  ]
+}

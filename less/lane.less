@@ -1,0 +1,118 @@
+.tl-lane {
+  height:30px;
+  min-height:30px;
+  width:50000px;
+  .tl-box-size;
+}
+
+.tl-lane:hover {
+  background:@background-highlight !important;
+  color:@text-highlight !important;
+  border-top: 5px solid @background-highlight !important;
+  border-bottom: 5px solid @background-highlight !important;
+}
+
+.timeline-js .tl-lane:nth-child(odd) {
+  background:@background-alt;
+  color:@text-alt;
+  border-top: 5px solid @background-alt;
+  border-bottom: 5px solid @background-alt;
+}
+
+.timeline-js .tl-lane:nth-child(even) {
+  background:@background;
+  color:@text;
+  border-top: 5px solid @background;
+  border-bottom: 5px solid @background;
+}
+
+
+
+.tl-lane .lane-title-box {
+  position:relative;
+  left:0px;
+  line-height:30px;
+  height:100%;
+  font-size:0.7em;
+  font-weight:100; 
+  text-align: center; 
+  width:200px;
+  float:left;
+  cursor:ns-resize;
+  border-right:1px solid mix(@background, @background-alt, 50);
+  .tl-box-size;
+}
+
+.tl-lane .lane-title {
+  
+}
+
+.tl-lane .lane-body {
+  padding:2px;
+  position:relative;
+  height:100%;
+  float:left;
+  overflow:hidden;
+  cursor:ns-resize;
+  width:100%;
+  .tl-box-size;
+}
+
+.tl-lane-container {
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom:20px;
+  background:@background-alt;
+  .tl-box-size;
+}
+
+.tl-lane .block {
+  color:@block-text;
+  padding:5px;
+  position:absolute;
+  left:0px;
+  top:0px;
+  height:100%;
+  width:50px;
+  background:@block;
+  border-radius:5px;
+  
+  /*box-shadow: 
+    inset 0 2px 9px  rgba(255,255,255,0.3),
+    inset 0 -2px 6px rgba(0,0,0,0.4);
+  */
+  font-size:0.4em;
+  font-weight: 100;
+  text-shadow: 1px 1px #000;
+  overflow:hidden;
+  cursor:move;
+  .tl-box-size;
+}
+
+.tl-lane .block:hover {
+ // box-shadow: 2px 1px 5px #1A1A1A;
+  
+  
+  background:lighten(@block, 10);
+}
+
+.tl-lane .block-active {
+  background:@block-active !important;
+}
+
+.tl-lane .block-sizer {
+  position:absolute;
+  right:0px;
+  top:0px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  width:8px;
+  height:100%;
+  cursor:ew-resize;
+  border-left:1px dashed darken(@block-resizer, 10);
+}
+
+.tl-lane .block-sizer:hover {
+ background:@block-resizer;
+  //border-left:1px dashed darken(@block-resizer, 10);
+}

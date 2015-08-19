@@ -1,0 +1,83 @@
+.tl-noselection {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor:default !important;
+}
+
+.tl-transition {
+  transition:0.2s ease all; 
+  -moz-transition:0.2s ease all; 
+  -webkit-transition:0.2s ease all;
+}
+
+.tl-transition-color {
+  transition:0.2s ease background,color,border; 
+  -moz-transition:0.2s ease background,color,border; 
+  -webkit-transition:0.2s ease background,color,border;
+}
+
+.tl-transition-opacity {
+  transition:0.2s ease opacity; 
+  -moz-transition:0.2s ease opacity; 
+  -webkit-transition:0.2s ease opacity;
+}
+
+.tl-box-size {
+  box-sizing:border-box !important;
+  -moz-box-sizing:border-box !important;
+  -webkit-box-sizing:border-box !important;
+}
+
+
+.timeline-js {
+  background:@background;
+  color:@text;
+  font-family:@font;
+  position:relative;
+  height:600px;
+  width:100%;
+  border-bottom:1px solid @background-alt;
+  .tl-box-size;
+  .tl-noselection;
+}
+
+.tl-time-indicator {
+  height:25px;
+
+  width:50000px;
+
+  background:@background-alt;
+  font-size:0.2em;
+  color:@timemarks;
+  border-bottom:1px solid @background-alt;
+  overflow:hidden;
+  .tl-box-size;
+}
+
+.tl-time-indicator .time {
+  margin-right:1000px;
+  padding-bottom:1px;
+}
+
+.tl-time-indicator .time-knob {
+  width:2px;
+  height:25px;
+  background:@background-alt;
+}
+
+.tl-time-marker {
+  position: absolute;
+  left:220px;
+  height:100%;
+  width:2px;
+  top:10px;
+  background:#AA0000;
+  z-index:1;
+}
+
+@import "lane.less";
+//@import "block.less";

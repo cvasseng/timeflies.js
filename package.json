@@ -1,0 +1,14 @@
+{
+  "author": "cmv",
+  "name": "timeline.js",
+  "description": "Timeline Editor",
+  "version": "0.0.1",
+  "private":true,
+  "bin": {
+  
+  },
+  "dependencies": {    
+    "express": "~4.12.0",   
+    "express-less": "*"    
+  }
+}
