@@ -60,44 +60,44 @@ The first argument is the DOM node to attach to.
       }
     });
     
- **Timeline Interface**
-    * `timeline.lane(number)`: returns a lane based on index, or false if out of bounds.   
-    * `timeline.on(event, callback)`: attach an event listener to the timeline.
-    * `forEachLane(callback)`: iterate through lanes 
-    * `resize()`: resizes the timeline control to fit its parent
-    * `setTime(timeMS)`: set the current time in milliseconds
-    * `process()`: process the timeline, activates any blocks intersecting with the current time
-    * `zoom(factor)`: set zoom factor. Factor is number of milliseconds per. pixel
+**Timeline Interface**
+  * `timeline.lane(number)`: returns a lane based on index, or false if out of bounds.   
+  * `timeline.on(event, callback)`: attach an event listener to the timeline.
+  * `forEachLane(callback)`: iterate through lanes 
+  * `resize()`: resizes the timeline control to fit its parent
+  * `setTime(timeMS)`: set the current time in milliseconds
+  * `process()`: process the timeline, activates any blocks intersecting with the current time
+  * `zoom(factor)`: set zoom factor. Factor is number of milliseconds per. pixel
     
- **Lane Interface**
-    * `removeBlock(id)`: remove a block from the lane
-    * `destroy()`: destroy the lane - removes it from the timeline control
-    * `addBlockAtPixel(pixel, attributes)`: add a block on a given pixel (x-coordinate). Attributes is an object containing the block initializer (see below).
-    * `addBlockAtTime(timems, attributes`: add a block on a given time
-    * `body`: the body DOM node for the lane
-    * `on(event, callback)`: attach an event listener to the lane
-    * `scrollTo(pos)`: scroll to a given pixel e.g. 1 means 1 pixel = 1 milliseconds, and 1000 means 1 pixel = 1 second
-    * `process(timeMs)`: process the lane with the time supplied
-    * `zoomUpdate`: updates the positions of all the child blocks to fit the current zoom factor
- 
- **Adding Blocks**
- Blocks can be added either by dragging them onto a lane, or by programatically calling `addBlockAtPixel` or `addBlockAtTime` on a lane.
- To make a draggable `div` that creates a block on a lane when dropped, use `tl.Draggable`:
-   
-     tl.Draggable(MyDiv, 'block', {
-        //Initialization arguments
-     });
+**Lane Interface**
+  * `removeBlock(id)`: remove a block from the lane
+  * `destroy()`: destroy the lane - removes it from the timeline control
+  * `addBlockAtPixel(pixel, attributes)`: add a block on a given pixel (x-coordinate). Attributes is an object containing the block initializer (see below).
+  * `addBlockAtTime(timems, attributes`: add a block on a given time
+  * `body`: the body DOM node for the lane
+  * `on(event, callback)`: attach an event listener to the lane
+  * `scrollTo(pos)`: scroll to a given pixel e.g. 1 means 1 pixel = 1 milliseconds, and 1000 means 1 pixel = 1 second
+  * `process(timeMs)`: process the lane with the time supplied
+  * `zoomUpdate`: updates the positions of all the child blocks to fit the current zoom factor
+
+**Adding Blocks**
+Blocks can be added either by dragging them onto a lane, or by programatically calling `addBlockAtPixel` or `addBlockAtTime` on a lane.
+To make a draggable `div` that creates a block on a lane when dropped, use `tl.Draggable`:
+  
+    tl.Draggable(MyDiv, 'block', {
+      //Initialization arguments
+    });
+  
+The initialization object is the same as that which can be supplied to the `addBlockAt` functions.
+It can have the following options (all are optional, though type should normally be supplied):
+
+    {
+      type: <type of node, corresponds with the first argument for tl.RegisterBlockType calls>,
+      start: <start time in milliseconds>,
+      length: <length of block in milliseconds>,
+      state: <the local state, this is accessed using this in the functions supplied to tl.RegisterBlockType>
+    }        
     
- The initialization object is the same as that which can be supplied to the `addBlockAt` functions.
- It can have the following options (all are optional, though type should normally be supplied):
- 
-     {
-       type: <type of node, corresponds with the first argument for tl.RegisterBlockType calls>,
-       start: <start time in milliseconds>,
-       length: <length of block in milliseconds>,
-       state: <the local state, this is accessed using this in the functions supplied to tl.RegisterBlockType>
-     }        
-     
- # License
- 
- MIT. See LICENSE.md for details.
+# License
+
+MIT. See LICENSE.md for details.
