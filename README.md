@@ -1,6 +1,6 @@
 # timeline.js
 
-![./screenshots/alpha.png](Screenshot)
+![Screenshot](screenshots/alpha.png)
 
 **Timeline UI Widget**
 
