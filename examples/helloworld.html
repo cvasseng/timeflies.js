@@ -49,7 +49,7 @@
         }
       });
      
-      //Proces the sequencer every 100ms
+      //Proces the sequencer every 100ms (NOTE: should use requestAnimationFrame instead, with a fallback to setInterval)
       setInterval(sequencer.process, 100);
       
       //Create a draggable div that creates a My Block Type block on the lane it's dropped on
