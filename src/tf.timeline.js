@@ -205,6 +205,7 @@ SOFTWARE.
       function addBlock(b) {
         blocks.push(b);
         b.on('Destroy', function () {
+          events.emit('RemoveBlock', b); 
           blocks = blocks.filter(function (block) {
             return b.id === block.id;
           });  
@@ -231,12 +232,12 @@ SOFTWARE.
       
       //Remove a block based on id
       function removeBlock(id) {
-        blocks = blocks.filter(function (block) {
+        blocks.some(function (block) {
           if (block.id === id) {
             events.emit('RemoveBlock', block);           
             block.destroy();
+            return true;
           }
-          return true;
         });
       }
       
