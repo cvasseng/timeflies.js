@@ -53,7 +53,17 @@
       setInterval(sequencer.process, 100);
       
       //Create a draggable div that creates a My Block Type block on the lane it's dropped on
-      var test = tf.cr('div', '', 'drop me');
+      var test = tf.cr('div', '', 'Drag me to a lane!');
+      
+      tf.style(test, {
+        fontFamily: 'Roboto',
+        background:"#333",
+        color: '#FFF',
+        padding:'4px',
+        width: '200px',
+        textAlign: 'center'    
+      });
+      
       tf.Draggable(test, 'block', {
         type: 'My Block Type'
       });
@@ -62,6 +72,8 @@
       
       //Set the time to 0
       sequencer.setTime(0);
+      //Resize the sequencer
+      sequencer.resize();
       
     </script>
 </html>
