@@ -204,6 +204,15 @@
                 y: y
               });
               
+              listeners.push(tf.on(n, 'contextmenu', function (e) {
+                self.keyframes = self.keyframes.filter(function (f) {
+                  return frame.v != f.v && frame.t != f.t;                  
+                });
+                sort(self);
+                build(self);
+                return tf.nodefault(e);
+              }));
+              
               mover.on('Moving', function (x, y) {
                 frame.t = x / width;
                 
