@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>timeflies.js</title>
+
+    <link href='http://fonts.googleapis.com/css?family=Roboto:300,400,700' rel='stylesheet' type='text/css'>
+    <link href='./css/light.css' rel='stylesheet' type='text/css'>
+   
+    <script src="./src/tf.js"></script>
+    <script src="./src/tf.events.js"></script>
+    <script src="./src/tf.resizer.js"></script>
+    <script src="./src/tf.mover.js"></script>
+    <script src="./src/tf.dnd.js"></script>
+    <script src="./src/tf.timeline.js"></script>
+   
+    <style>     
+       html, body {
+        padding:0;
+        margin:0;
+        background:#FFF;  
+      }     
+      
+      .draggable {
+        fontFamily: 'Roboto';
+        background:#333;
+        color: #FFF;
+        padding:4px;
+        width: 200px;
+        textAlign: center;  
+      }
+      
+      svg {
+        /*background-color:#0157AB;*/
+      }
+      
+     </style>
+   
+    </head>
+    <body>
+      <!-- Zoom slider (may not render correctly in certain browsers) -->
+      -<input type="range" max="100" min="1" value="100" onchange="doZoom(this);"/>+   
+    </body>
+    <script>
+      
+      //Zoom the sequencer
+      function doZoom(sender) {
+        sequencer.zoom(parseFloat(100 - parseInt(sender.value, 10)) / 10);  
+      }
+      
+      //Create a sequencer instance, and add it to document.body
+      var sequencer = tf.Sequencer(document.body, {
+        initialLanes: 10
+      });
+      
+      //Add a custom block to the block pool
+      tf.RegisterBlockType('LERP', {
+        state: {
+          //Our keyframes. t = time in range [0..1], v = value at the given time.
+          keyframes: [
+            {t: 0,    v: 0}, 
+            {t: 0.25,    v: 1}, 
+            {t: 0.5,  v: 0}, 
+            {t: 0.75,  v: 1}, 
+            {t: 1,    v: 0}
+          ],
+          //The key we're currently interpolating from
+          fromKey: 0,
+          //The key we're currently interpolating to
+          toKey: 0,
+          //Current value
+          value: 0
+        },
+        construct: function (parent, on) {
+          //Sort the keyframes
+          function sort(self) {
+            self.keyframes = self.keyframes.sort(function (a, b) {
+              return a.t > b.t;
+            });
+          }
+          
+          //Build the UI
+          function build(self) {
+            var width = tf.size(parent).w - 10,
+                height = tf.size(parent).h,
+                last = false
+           ;
+            
+            svg.innerHTML = '';
+            
+            self.keyframes.forEach(function (frame) {
+              var y, 
+                  x =  (frame.t * width), 
+                  n, 
+                  line = false,
+                  prev,
+                  mover,
+                  max = 10,
+                  min = -10
+              ;
+              
+              
+              //We assume that 50% is 0, 100% is min, 0% is max
+              y = frame.v / height;
+      
+              //Calculate Y position of the frame
+              if (frame.v < 0) {
+                y = (height / 2) + (-(frame.v) * (height / 2));
+              } else {
+                y = (1 - frame.v) * (height / 2);
+              }
+              
+              
+              //Create the line
+              if (last) {
+                line = SVGLine(last.x + 5, last.y + 5, x + 5, y + 5);
+              }
+      
+              //Create the node for the frame
+              n = SVGKeyFrame(x, y);
+              //Hover text for the frame
+              n.setAttributeNS(null, 'title', 't = ' + frame.t + ' v = ' + frame.v);                           
+              
+              tf.Mover(n, n);
+              
+              
+              last = {
+                line: line,
+                x: x,
+                y: y  
+              };
+            });
+          }
+          
+          //Helper function to put SVG text onto the svg canvas
+          function SVGText(x, y, text) {
+            var node = document.createElementNS(svgNS, 'text');
+            node.setAttributeNS(null, 'x', x);
+            node.setAttributeNS(null, 'y', y);
+            node.setAttributeNS(null, 'text', text);
+            node.setAttributeNS(null, 'fill', '#FFF');
+            node.setAttributeNS(null, 'stroke', 'none');
+            tf.ap(svg, node);
+            return node;
+          }
+      
+          //Helper function to draw a line
+          function SVGLine(x1, y1, x2, y2) {
+            var node = document.createElementNS(svgNS, 'line');
+            node.setAttributeNS(null, 'x1', x1);
+            node.setAttributeNS(null, 'x2', x2);
+            node.setAttributeNS(null, 'y1', y1);
+            node.setAttributeNS(null, 'y2', y2);
+            node.setAttributeNS(null, 'stroke', '#FFF');
+            tf.ap(svg, node);
+            return node;
+          }
+      
+          //Helper function to draw a keyframe
+          function SVGKeyFrame(x, y) {
+            var node = document.createElementNS(svgNS, 'rect');
+            node.setAttributeNS(null, 'x', x);
+            node.setAttributeNS(null, 'y', y);
+            node.setAttributeNS(null, 'width', 10);
+            node.setAttributeNS(null, 'height', 10);
+            node.setAttributeNS(null, 'fill', '#FFF');
+            tf.ap(svg, node);
+            return node;
+          }
+          
+          //Create a UI for the editor
+          var svgNS = 'http://www.w3.org/2000/svg',
+              svg = document.createElementNS(svgNS,'svg')
+          ;
+          
+          //Need to set some properties to the svg node
+          svg.setAttributeNS(null, 'height', '100%');
+          svg.setAttributeNS(null, 'width', '100%');
+          svg.setAttributeNS(null, 'viewbox', '0 0 3 2');
+          
+          //Build the SVG
+          build(this);
+          
+          //Call build when resizing
+          on('Resize', build);
+          
+          //Attach event listener to the canvas
+          
+          //Append the UI to the block node
+          tf.ap(parent,
+             svg
+          );          
+        },
+        process: function (blockTime) {
+          //Linear interpolation
+          function lerp(a, b, f) {
+            return (a * (1 - f)) + (b * f);
+          }
+          
+          //Find the current fromKey/toKey
+          this.fromKey = this.toKey = 0;
+          if (this.keyframes.length <= 1) {
+            value = this.keyframes.length == 1 ? this.keyframes[0].v : 0;
+            return;
+          }
+          
+          for (var i = 0; i < this.keyframes.length; i++) {
+            if (this.keyframes[i].t < blockTime) this.fromKey = i;
+            if (this.keyframes[i].t > blockTime) {
+              this.toKey = i;
+              break;
+            }
+          }
+          
+          this.fromKey = this.keyframes[this.fromKey];
+          this.toKey = this.keyframes[this.toKey];
+          
+          //Calulate the current value
+          value = lerp(from.v, to.v, (t - from.t) / (to.t - from.t));
+        }
+      });
+     
+      //Proces the sequencer every 100ms (NOTE: should use requestAnimationFrame instead, with a fallback to setInterval)
+      setInterval(sequencer.process, 100);
+      
+      //Create a draggable div that creates a My Block Type block on the lane it's dropped on
+      var test = tf.cr('div', 'draggable', 'Drag me to a lane!');
+      
+      tf.Draggable(test, 'block', {
+        type: 'LERP'
+      });
+      
+      tf.ap(document.body, test);
+      
+      //Set the time to 0
+      sequencer.setTime(0);
+      //Resize the sequencer
+      sequencer.resize();
+      
+    </script>
+</html>

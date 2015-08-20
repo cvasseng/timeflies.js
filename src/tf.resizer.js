@@ -85,21 +85,19 @@ tf.Resizer = function (handle, target, dir) {
       });
   
       mover = tf.on(document.body, 'mousemove', function (e) {
-        if (moving) {
-  
-          size.w = osize.w + (e.clientX - delta.x);
-          size.h = osize.h + (e.clientY - delta.y);
-          
-          if (size.w < minSize.w) size.w = minSize.w;
-          if (size.h < minSize.h) size.h = minSize.h;
+        if (moving) {          
           
           if (direction === 'X' || direction === 'XY') {
+            size.w = osize.w + (e.clientX - delta.x);
+            if (size.w < minSize.w) size.w = minSize.w;
             tf.style(target, {
               width: size.w + 'px'
             });  
           }
           
           if (direction === 'Y' || direction === 'Y') {            
+            size.h = osize.h + (e.clientY - delta.y);
+            if (size.h < minSize.h) size.h = minSize.h;
             tf.style(target, {
               height: size.h + 'px'
             });

@@ -74,18 +74,30 @@ SOFTWARE.
           }, attrs),
           proto = blockPool[pinterface.type] || false,
           node = tf.cr('div', 'block tl-transition-color'),
+          body = tf.cr('div', 'block-body'),
           sizer = tf.cr('div', 'block-sizer tl-transition-color'),
           title = tf.cr('span', '', pinterface.type),
           resizer = tf.Resizer(sizer, node, 'X'),
-          mover = tf.Mover(node, node, 'X')
+          mover = tf.Mover(node, node, 'X'),
+          size = {w: 0, h: 0}
       ;
       
       function constructProto() {
         if (proto) {
           tf.merge(pinterface.state, proto.state);
-          proto.construct.apply(pinterface.state, [node]);
+          proto.construct.apply(pinterface.state, [body, events.on]);
         }
       }
+      
+      function resizeBody() {
+        tf.style(body, {
+          width: size.w - 10 + 'px',
+          height: tf.size(node).h - 25 + 'px'
+        });
+        events.emit('Resize', proto.state);
+      }
+      
+      pinterface.resizeBody = resizeBody;
           
       //Serialize block to JSON
       pinterface.toJSON = function () {
@@ -150,9 +162,10 @@ SOFTWARE.
       
       //Recalculate the x and width based on zoom factor
       pinterface.recalc = function () {
+        size.w = (pinterface.length / zoomFactor);
         tf.style(node, {
           left: (pinterface.start / zoomFactor) + 'px',
-          width: (pinterface.length / zoomFactor) + 'px'
+          width: size.w + 'px'
         }); 
       };
       
@@ -167,12 +180,16 @@ SOFTWARE.
       
       tf.ap(node, 
         title,
-        sizer
+        sizer,
+        body
       );
       
       resizer.on('Resizing', function (w, h) {
         //Recalc length  
+        size.w = w;
+        size.h = h;
         pinterface.length = w * zoomFactor;
+        resizeBody();
       });
       
       mover.on('Moving', function (x, y) {
@@ -200,6 +217,12 @@ SOFTWARE.
           dropTarget = tf.DropTarget(body, 'block block-move'),
           blocks = []        
       ;           
+      
+      resizer.on('Done', function () {
+        blocks.forEach(function (b) {
+          b.resizeBody();
+        });
+      });
       
       //Add a block
       function addBlock(b) {
