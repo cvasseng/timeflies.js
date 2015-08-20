@@ -289,6 +289,7 @@ SOFTWARE.
       function zoomUpdated() {
         blocks.forEach(function (b) {
           b.recalc();
+          b.resizeBody();
         });
       }
       
