@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Timeline.js
+Timeflies.js
 
 Copyright (c) 2015 Chris Vasseng
 
@@ -23,9 +23,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
- *****************************************************************************/
+******************************************************************************/
 
-tl.events = function () {
+tf.events = function () {
   var listeners = {},
       count = 0
   ;
@@ -54,7 +54,7 @@ tl.events = function () {
   /*
     Returns a function that can be called to unbind the event
   */
-  function on(evnt, fn) {
+  function on(evnt, fn, ctx) {
     var id = (typeof uuid !== 'undefined') ? uuid.v4() : (++count),
         s = []
     ;
@@ -62,7 +62,7 @@ tl.events = function () {
     //Handle binding multiple things to the same event
     if (evnt && evnt.forEach) {
       evnt.forEach(function (v) {
-        s.push(on(v, fn));
+        s.push(on(v, fn, ctx));
       });
       return function () {
         s.forEach(function (f) {
@@ -75,7 +75,8 @@ tl.events = function () {
 
     listeners[evnt].push({
       id: id,
-      fn: fn
+      fn: fn,
+      ctx: ctx
     });
 
     return function () {

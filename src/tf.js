@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Timeline.js
+Timeflies.js
 
 Copyright (c) 2015 Chris Vasseng
 
@@ -23,9 +23,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
- *****************************************************************************/
+******************************************************************************/
 
-var tl = {
+var tf = {
   
   //Append nodes to a target
   ap: function (target) {
@@ -60,7 +60,7 @@ var tl = {
   style: function (node, st) {
     if (node.forEach) {
       node.forEach(function (n) {
-        tl.style(n, st);
+        tf.style(n, st);
       });
       return node;
     }
@@ -78,7 +78,7 @@ var tl = {
     
     if (target && target.forEach) {
       target.forEach(function (t) {
-        s.push(tl.on(t, event, func));
+        s.push(tf.on(t, event, func));
       });
       return function () {
         s.forEach(function (f) {

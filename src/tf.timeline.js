@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Timeline.js
+Timeflies.js
 
 Copyright (c) 2015 Chris Vasseng
 
@@ -22,46 +22,48 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+
 ******************************************************************************/
  
 (function () { 
   var blockPool = {};
   
   //Register a block type
-  tl.RegisterBlockType = function (name, attributes) {    
+  tf.RegisterBlockType = function (name, attributes) {    
     if (!name) return;    
-    blockPool[name] = tl.merge({
+    blockPool[name] = tf.merge({
       state: {},
       process: function () {},
       startProcess: function (){},
       stopProcess: function () {},
       construct: function () {},
+      destroy: function () {},
       title: function () {}  
     }, attributes);
   };
   
-  tl.Timeline = function (parent, attrs) {
-    var events = tl.events(),
-        container = tl.cr('div', 'timeline-js'),     
-        timeContainer = tl.cr('div', 'tl-time-indicator'),
-        timeMarker = tl.cr('div', 'tl-time-marker'),
-        scrollBar = tl.cr('div'),
-        laneBox = tl.cr('div', 'tl-lane-container'),
+  tf.Sequencer = function (parent, attrs) {
+    var events = tf.events(),
+        container = tf.cr('div', 'timeline-js'),     
+        timeContainer = tf.cr('div', 'tl-time-indicator'),
+        timeMarker = tf.cr('div', 'tl-time-marker'),
+        scrollBar = tf.cr('div'),
+        laneBox = tf.cr('div', 'tl-lane-container'),
         lanes = [],
         bcount = 0,
         currentTime = 0,
         zoomFactor = 1,
-        properties = tl.merge({
+        properties = tf.merge({
           initialLanes: 10
         }, attrs)
     ;
   
     //Create a block
     function Block(parent, attrs, data) {
-      var events = tl.events(),          
+      var events = tf.events(),          
           blockTime = 0,
           isProcessing = false,
-          pinterface = tl.merge({
+          pinterface = tf.merge({
             state: {},
             type: 'Unkown Type',
             on: events.on,
@@ -71,16 +73,16 @@ SOFTWARE.
             length: 100
           }, attrs),
           proto = blockPool[pinterface.type] || false,
-          node = tl.cr('div', 'block tl-transition-color'),
-          sizer = tl.cr('div', 'block-sizer tl-transition-color'),
-          title = tl.cr('span', '', pinterface.type),
-          resizer = tl.Resizer(sizer, node, 'X'),
-          mover = tl.Mover(node, node, 'X')
+          node = tf.cr('div', 'block tl-transition-color'),
+          sizer = tf.cr('div', 'block-sizer tl-transition-color'),
+          title = tf.cr('span', '', pinterface.type),
+          resizer = tf.Resizer(sizer, node, 'X'),
+          mover = tf.Mover(node, node, 'X')
       ;
       
       function constructProto() {
         if (proto) {
-          tl.merge(pinterface.state, proto.state);
+          tf.merge(pinterface.state, proto.state);
           proto.construct.apply(pinterface.state, [node]);
         }
       }
@@ -111,6 +113,9 @@ SOFTWARE.
       pinterface.destroy = function () {
         events.emit('Destroy', pinterface.id);
         node.parentNode.removeChild(node);
+        if (proto) {
+          proto.destroy.apply(pinterface.state);
+        }
       };
       
       //Process
@@ -145,7 +150,7 @@ SOFTWARE.
       
       //Recalculate the x and width based on zoom factor
       pinterface.recalc = function () {
-        tl.style(node, {
+        tf.style(node, {
           left: (pinterface.start / zoomFactor) + 'px',
           width: (pinterface.length / zoomFactor) + 'px'
         }); 
@@ -155,12 +160,12 @@ SOFTWARE.
       
       pinterface.recalc();    
           
-      tl.Draggable(node, 'block-move', pinterface).on('Drop', function () {
+      tf.Draggable(node, 'block-move', pinterface).on('Drop', function () {
         //So we need to destroy this thing. 
         pinterface.destroy(); 
       });      
       
-      tl.ap(node, 
+      tf.ap(node, 
         title,
         sizer
       );
@@ -176,7 +181,7 @@ SOFTWARE.
       });
       
       if (parent) {
-        tl.ap(parent, node);
+        tf.ap(parent, node);
       }
       
       constructProto();
@@ -188,11 +193,11 @@ SOFTWARE.
   
     //Creates a single lane
     function Lane(parent, name) {
-      var events = tl.events(),       
-          container = tl.cr('div', 'tl-lane tl-box-size tl-transition'),
-          body = tl.cr('div', 'lane-body tl-box-size'),
-          resizer = tl.Resizer(body, container, 'Y'),
-          dropTarget = tl.DropTarget(body, 'block block-move'),
+      var events = tf.events(),       
+          container = tf.cr('div', 'tl-lane tl-box-size tl-transition'),
+          body = tf.cr('div', 'lane-body tl-box-size'),
+          resizer = tf.Resizer(body, container, 'Y'),
+          dropTarget = tf.DropTarget(body, 'block block-move'),
           blocks = []        
       ;           
       
@@ -213,16 +218,21 @@ SOFTWARE.
       
       //Add a block on a given pixel
       function addBlockAtPixel(x, attrs) {
-        var b = Block(body, tl.merge(attrs || {}, {
+        var b = Block(body, tf.merge(attrs || {}, {
           start: x * zoomFactor
         }));
+        events.emit('AddBlock', b);
         return addBlock(b);
       }
       
       //Remove a block based on id
       function removeBlock(id) {
         blocks = blocks.filter(function (block) {
-           return block.id !== id;
+          if (block.id === id) {
+            events.emit('RemoveBlock', block);           
+            block.destroy();
+          }
+          return true;
         });
       }
       
@@ -233,7 +243,7 @@ SOFTWARE.
       }
       
       //Destroy the lane
-      function destroy() {
+      function destroy() {       
         container.parentNode.removeChild(container);
         container.innerHTML = '';
       }
@@ -279,12 +289,12 @@ SOFTWARE.
       });
       
       //Put together the DOM heirarchy 
-      tl.ap(container, 
+      tf.ap(container, 
         body
       );
           
       if (parent) {
-        tl.ap(parent, container);
+        tf.ap(parent, container);
       }
       
       return {
@@ -310,21 +320,23 @@ SOFTWARE.
     }  
     
     function resize() {
-      var size = tl.size(container);
+      var size = tf.size(container);
      
-      tl.style(laneBox, {
+      tf.style(laneBox, {
         width: size.w + 'px',
-        height: (size.h - tl.size(scrollBar).h) + 'px'
+        height: (size.h - tf.size(scrollBar).h) + 'px'
       });
       
-      tl.style(timeMarker, {
+      tf.style(timeMarker, {
         height: size.h - 10 + 'px'
       });
     }
     
     function addLane() {
-      lanes.push(Lane(laneBox, 'Lane ' + i));
-      return lanes[lanes.length - 1];
+      var l = Lane(laneBox, 'Lane ' + i);
+      lanes.push(l);
+      events.emit('AddLane', l);
+      return l;
     }
     
     //1 pixels = factor milliseconds
@@ -343,7 +355,7 @@ SOFTWARE.
     
     function setTime(t) {
       //Need to scroll + set marker position
-      tl.style(timeMarker, {
+      tf.style(timeMarker, {
         left: (t / zoomFactor) + 'px'
       });
       currentTime = t;
@@ -379,15 +391,15 @@ SOFTWARE.
     
     /////////////////////////////////////////////////////////////////////////////
     
-    tl.style(scrollBar, {
+    tf.style(scrollBar, {
       'overflow-x': 'scroll',
       'overflow-y': 'hidden',
       width: '100%'
     });
            
-    tl.ap(container, 
+    tf.ap(container, 
       timeMarker,
-      tl.ap(scrollBar, 
+      tf.ap(scrollBar, 
         timeContainer       
       ),
       laneBox
@@ -399,24 +411,24 @@ SOFTWARE.
     }
    
     for (var i = 0; i < 500; i++) {
-      tl.ap(timeContainer, tl.cr('span', 'time', i));
+      tf.ap(timeContainer, tf.cr('span', 'time', i));
     }
     
     if (parent) {
-      tl.ap(parent, container);
+      tf.ap(parent, container);
     }
     
-    tl.on(timeContainer, 'click', function (e) {
-       tl.style([timeMarker], {
+    tf.on(timeContainer, 'click', function (e) {
+       tf.style([timeMarker], {
          left: e.clientX + 'px'
        });
        currentTime = (e.clientX + scrollBar.scrollLeft) * zoomFactor;
     });
     
-    tl.on(scrollBar, 'scroll', function (e) {
+    tf.on(scrollBar, 'scroll', function (e) {
       laneBox.scrollLeft = scrollBar.scrollLeft;
       timeContainer.scrollLeft = scrollBar.scrollLeft;
-      tl.style(timeMarker, {
+      tf.style(timeMarker, {
         left: (currentTime / zoomFactor) - scrollBar.scrollLeft + 'px'    
       });
     });

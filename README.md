@@ -1,8 +1,8 @@
-# timeline.js
+# timeflies.js
 
 ![Screenshot](screenshots/alpha.png)
 
-**Timeline UI Widget**
+**Timeline/sequencer UI Widget**
 
 Suggested use cases include:
   * Sequencing sound
@@ -21,23 +21,38 @@ Suggested use cases include:
       
 #Building
  
- To build timeline.js, you need bakor installed. Bakor is a node module, 
+ To build timeflies.js, you need bakor installed. Bakor is a node module, 
  and must be installed globally, i.e. `npm install -g bakor`.
- Once installed, build by running `bakor` in the timeline.js root directory.
+ Once installed, build by running `bakor` in the timeflies.js root directory.
  
  This will produce a set of files in `./build/` which can be included in your application.
+ 
+#Examples
+
+Examples can be found in the [examples](/examples) folder. There's a simple express server in the repository ([/bin/www](/bin/www)).
+To use this, first run `npm install` in the root directory (or `sudo npm install` on OSX), then run `node bin/www`.
+This will start an HTTP server serving up the examples-folder on port `3050`. Note that you **have to** run this server for the examples to work
+properly, as they use the "unbuilt" sources - both for the JavaSript, and for the CSS. 
+ 
+After starting the server as descripted above, go to e.g. `http://127.0.0.1:3050/helloworld.html` in your browser. 
  
 #Usage
 
 **Creating a timeline control**
     
-    var timeline = tl.Timeline(document.body);
+    var timeline = tf.Sequencer(document.body);
+    
+**A note on events**
+
+Most things emit events which can be listened to using the `on(event, callback)` function.
+This function returns a function that can be called to unsubscribe from the event.
+Details on which events are available can be found below.
     
 The first argument is the DOM node to attach to.
 
 **Adding custom blocks**
     
-    tl.RegisterBlockType('MyCustomBlock', {
+    tf.RegisterBlockType('MyCustomBlock', {
       state: {
         //Put initial state here.
         //The block copy of the state can be accessed using the this keyword.
@@ -46,6 +61,9 @@ The first argument is the DOM node to attach to.
         //Called when the block is created.
         //blockNode contains the block DOM node,
         //so this function can be used to e.g. add a spline editor in a block
+      },
+      destroy: function () {
+        //Called when the block is destroyed
       },
       startProcess: function () {
         //Called when the block becomes active
@@ -60,9 +78,9 @@ The first argument is the DOM node to attach to.
       }
     });
     
-**Timeline Interface**
-  * `timeline.lane(number)`: returns a lane based on index, or false if out of bounds.   
-  * `timeline.on(event, callback)`: attach an event listener to the timeline.
+**tf.Sequencer Interface**
+  * `lane(number)`: returns a lane based on index, or false if out of bounds.   
+  * `on(event, callback)`: attach an event listener to the timeline.
   * `forEachLane(callback)`: iterate through lanes 
   * `resize()`: resizes the timeline control to fit its parent
   * `setTime(timeMS)`: set the current time in milliseconds
@@ -70,6 +88,9 @@ The first argument is the DOM node to attach to.
   * `zoom(factor)`: set zoom factor. Factor is number of milliseconds per. pixel
   * `toJSON()`: serialize the timeline to a JSON object
   * `fromJSON(obj)`: unserialize the timeline from a JSON object
+    
+ *Events*
+  * `Addlane : lane`: emitted when a lane is added    
     
 **Lane Interface**
   * `removeBlock(id)`: remove a block from the lane
@@ -84,12 +105,16 @@ The first argument is the DOM node to attach to.
   * `toJSON()`: serializes the lane to a JSON object
   * `fromJSON(obj)`: unpack the lane from an object
 
+*Events*
+  * `AddBlock : <block instance>`: emitted when a new block is added to the lane
+  * `RemoveBlock : <block>`: emitted when a block is removed from the lane
+
 **Adding Blocks**
 
 Blocks can be added either by dragging them onto a lane, or by programatically calling `addBlockAtPixel` or `addBlockAtTime` on a lane.
-To make a draggable `div` that creates a block on a lane when dropped, use `tl.Draggable`:
+To make a draggable `div` that creates a block on a lane when dropped, use `tf.Draggable`:
   
-    tl.Draggable(MyDiv, 'block', {
+    tf.Draggable(MyDiv, 'block', {
       //Initialization arguments
     });
   
@@ -97,10 +122,10 @@ The initialization object is the same as that which can be supplied to the `addB
 It can have the following options (all are optional, though type should normally be supplied):
 
     {
-      type: <type of node, corresponds with the first argument for tl.RegisterBlockType calls>,
+      type: <type of node, corresponds with the first argument for tf.RegisterBlockType calls>,
       start: <start time in milliseconds>,
       length: <length of block in milliseconds>,
-      state: <the local state, this is accessed using this in the functions supplied to tl.RegisterBlockType>
+      state: <the local state, this is accessed using this in the functions supplied to tf.RegisterBlockType>
     }        
     
 # License

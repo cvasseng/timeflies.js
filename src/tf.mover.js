@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Timeline.js
+Timeflies.js
 
 Copyright (c) 2015 Chris Vasseng
 
@@ -23,10 +23,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
- *****************************************************************************/
+******************************************************************************/
  
- tl.Mover = function (handle, target, axis) {
-  var events = tl.events(),
+ tf.Mover = function (handle, target, axis) {
+  var events = tf.events(),
       moving = false,
       delta = {x: 0, y: 0},
       pos = {x: 0, y: 0},
@@ -46,7 +46,7 @@ SOFTWARE.
     enabled = false;
   }
 
-  tl.on(handle, 'mousedown', function (e) {
+  tf.on(handle, 'mousedown', function (e) {
     var upper, 
         mover
     ;
@@ -55,47 +55,47 @@ SOFTWARE.
       return;
     }
 
-    opos = tl.pos(target);
+    opos = tf.pos(target);
 
     delta.x = e.clientX;
     delta.y = e.clientY;
 
     moving = true;
 
-    upper = tl.on(document.body, 'mouseup', function (e) {
+    upper = tf.on(document.body, 'mouseup', function (e) {
       upper();
       mover();
 
       events.emit('Done', pos.x, pos.y);
       
       moving = false;
-      return tl.nodefault(e);
+      return tf.nodefault(e);
     });
 
-    mover = tl.on(document.body, 'mousemove', function (e) {
+    mover = tf.on(document.body, 'mousemove', function (e) {
       if (moving) {
 
         if (!axis || axis === 'X') {
          pos.x = opos.x + (e.clientX - delta.x);
          if (pos.x < 0) pos.x = 0;
-         tl.style(target, {
+         tf.style(target, {
             left: pos.x + 'px'            
           });  
         }
         
         if (!axis || axis === 'Y') {
           pos.y = opos.y + (e.clientY - delta.y);
-          tl.style(target, {         
+          tf.style(target, {         
             top: pos.y + 'px'
           });          
         }
 
         events.emit('Moving', pos.x, pos.y);
       }
-      return tl.nodefault(e);
+      return tf.nodefault(e);
     });
 
-    return tl.nodefault(e);
+    return tf.nodefault(e);
   });
 
   return {

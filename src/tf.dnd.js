@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Timeline.js
+Timeflies.js
 
 Copyright (c) 2015 Chris Vasseng
 
@@ -23,21 +23,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
- *****************************************************************************/
+******************************************************************************/
  
  (function () {
   var activePayload = false;
 
   ///////////////////////////////////////////////////////////////////////////
   //Make a node draggable
-  tl.Draggable = function(target, type, payload) {
-    var events = tl.events(),
+  tf.Draggable = function(target, type, payload) {
+    var events = tf.events(),
         callbacks = []
     ;
 
     target.setAttribute('draggable', true);
 
-    callbacks.push(tl.on(target, 'dragstart', function (e) {
+    callbacks.push(tf.on(target, 'dragstart', function (e) {
       e.dataTransfer.effectAllowed = 'copy';
 
       activePayload = {
@@ -49,7 +49,7 @@ SOFTWARE.
       events.emit('DragStart');
     }));
 
-    callbacks.push(tl.on(target, 'dragend', function (e) {
+    callbacks.push(tf.on(target, 'dragend', function (e) {
       events.emit('DragEnd');
     }));
 
@@ -60,9 +60,9 @@ SOFTWARE.
 
   ///////////////////////////////////////////////////////////////////////////
   //Turn a node into a drop target
-  tl.DropTarget = function(target, types) {
+  tf.DropTarget = function(target, types) {
     var enabled,
-        events = tl.events(),
+        events = tf.events(),
         callbacks = [],
         tarray = types.split(' ')
     ;
@@ -78,22 +78,22 @@ SOFTWARE.
     function attach() {
       destroy();
 
-      callbacks.push(tl.on(target, 'dragenter', function (e) {
+      callbacks.push(tf.on(target, 'dragenter', function (e) {
         events.emit('DragEnter');
         return nodef(e);
       }));
 
-      callbacks.push(tl.on(target, 'dragleave', function (e) {
+      callbacks.push(tf.on(target, 'dragleave', function (e) {
         events.emit('DragLeave');
       }));
 
-      callbacks.push(tl.on(target, 'dragover', function (e) {
+      callbacks.push(tf.on(target, 'dragover', function (e) {
         e.dataTransfer.dropEffect = 'copy';
         events.emit('DragOver');
         return nodef(e);
       }));
 
-      callbacks.push(tl.on(target, 'drop', function (e) {
+      callbacks.push(tf.on(target, 'drop', function (e) {
         if (!activePayload || types.indexOf(activePayload.type) === -1) {
           return;
         }

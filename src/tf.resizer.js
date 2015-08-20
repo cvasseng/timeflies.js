@@ -1,6 +1,6 @@
 /******************************************************************************
 
-Timeline.js
+Timeflies.js
 
 Copyright (c) 2015 Chris Vasseng
 
@@ -23,10 +23,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
- *****************************************************************************/
+******************************************************************************/
  
-tl.Resizer = function (handle, target, dir) {
-  var events = tl.events(),
+tf.Resizer = function (handle, target, dir) {
+  var events = tf.events(),
       moving = false,
       delta = {x: 0, y: 0},
       size = {w: 0, h: 0},
@@ -58,7 +58,7 @@ tl.Resizer = function (handle, target, dir) {
   function create() {
     destroy();
     
-    mainHandle = tl.on(handle, 'mousedown', function (e) {
+    mainHandle = tf.on(handle, 'mousedown', function (e) {
       var upper, 
           mover
       ;
@@ -67,7 +67,7 @@ tl.Resizer = function (handle, target, dir) {
         return;
       }
   
-      osize = tl.size(target);
+      osize = tf.size(target);
   
       delta.x = e.clientX;
       delta.y = e.clientY;
@@ -76,15 +76,15 @@ tl.Resizer = function (handle, target, dir) {
       
       events.emit('Start');
   
-      upper = tl.on(document.body, 'mouseup', function (e) {
+      upper = tf.on(document.body, 'mouseup', function (e) {
         upper();
         mover();   
         moving = false;
         events.emit('Done', size.w, size.h);
-        return tl.nodefault(e);
+        return tf.nodefault(e);
       });
   
-      mover = tl.on(document.body, 'mousemove', function (e) {
+      mover = tf.on(document.body, 'mousemove', function (e) {
         if (moving) {
   
           size.w = osize.w + (e.clientX - delta.x);
@@ -94,22 +94,22 @@ tl.Resizer = function (handle, target, dir) {
           if (size.h < minSize.h) size.h = minSize.h;
           
           if (direction === 'X' || direction === 'XY') {
-            tl.style(target, {
+            tf.style(target, {
               width: size.w + 'px'
             });  
           }
           
           if (direction === 'Y' || direction === 'Y') {            
-            tl.style(target, {
+            tf.style(target, {
               height: size.h + 'px'
             });
           }
   
           events.emit('Resizing', size.w, size.h);
         }
-        return tl.nodefault(e);
+        return tf.nodefault(e);
       });
-      return tl.nodefault(e);
+      return tf.nodefault(e);
     });
   }
   

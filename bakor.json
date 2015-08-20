@@ -1,14 +1,14 @@
 {
-  "name": "timeline.js",
+  "name": "timeflies",
   "outputDir": "./build",
   "dependencies":[],
   "js":[
-    "src/tl.js",
-    "src/tl.events.js",
-    "src/tl.mover.js",
-    "src/tl.resizer.js",
-    "src/tl.dnd.js",
-    "src/tl.timeline.js"
+    "src/tf.js",
+    "src/tf.events.js",
+    "src/tf.mover.js",
+    "src/tf.resizer.js",
+    "src/tf.dnd.js",
+    "src/tf.timeline.js"
   ],
   "css":[],
   "less":[
