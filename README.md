@@ -68,6 +68,8 @@ The first argument is the DOM node to attach to.
   * `setTime(timeMS)`: set the current time in milliseconds
   * `process()`: process the timeline, activates any blocks intersecting with the current time
   * `zoom(factor)`: set zoom factor. Factor is number of milliseconds per. pixel
+  * `toJSON()`: serialize the timeline to a JSON object
+  * `fromJSON(obj)`: unserialize the timeline from a JSON object
     
 **Lane Interface**
   * `removeBlock(id)`: remove a block from the lane
@@ -79,8 +81,11 @@ The first argument is the DOM node to attach to.
   * `scrollTo(pos)`: scroll to a given pixel e.g. 1 means 1 pixel = 1 milliseconds, and 1000 means 1 pixel = 1 second
   * `process(timeMs)`: process the lane with the time supplied
   * `zoomUpdate`: updates the positions of all the child blocks to fit the current zoom factor
+  * `toJSON()`: serializes the lane to a JSON object
+  * `fromJSON(obj)`: unpack the lane from an object
 
 **Adding Blocks**
+
 Blocks can be added either by dragging them onto a lane, or by programatically calling `addBlockAtPixel` or `addBlockAtTime` on a lane.
 To make a draggable `div` that creates a block on a lane when dropped, use `tl.Draggable`:
   

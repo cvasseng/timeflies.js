@@ -251,6 +251,23 @@ SOFTWARE.
         });
       }
       
+      function toJSON() {
+        return blocks.map(function (b) {
+          return b.toJSON();
+        });
+      }
+      
+      function fromJSON(obj) {
+        blocks = blocks.filter(function (b) {
+          b.destroy();
+          return false;
+        });
+        
+        obj.forEach(function (b) {
+          addBlock(Block(body, b));
+        });
+      }
+      
       /////////////////////////////////////////////////////////////////////////////         
           
       dropTarget.on('Drop', function (payload, type, e) {
@@ -279,7 +296,9 @@ SOFTWARE.
         on: events.on,
         scrollTo: scrollTo,
         process: process,
-        zoomUpdated: zoomUpdated
+        zoomUpdated: zoomUpdated,
+        toJSON: toJSON,
+        fromJSON: fromJSON
       }
     } 
   
@@ -305,6 +324,7 @@ SOFTWARE.
     
     function addLane() {
       lanes.push(Lane(laneBox, 'Lane ' + i));
+      return lanes[lanes.length - 1];
     }
     
     //1 pixels = factor milliseconds
@@ -338,6 +358,23 @@ SOFTWARE.
     function getLane(num) {
       if (num < lanes.length) return lanes[num];
       return false;
+    }
+    
+    function toJSON() {
+      return lanes.map(function (lane) {
+        return lane.toJSON();
+      });
+    }
+    
+    function fromJSON(obj) {
+      lanes = lanes.filter(function (l) {
+        l.destroy();
+        return false;
+      });
+      
+      obj.forEach(function (l) {
+        addLane().fromJSON(l);
+      });
     }
     
     /////////////////////////////////////////////////////////////////////////////
@@ -395,7 +432,9 @@ SOFTWARE.
       resize: resize,
       setTime: setTime,
       process: process,
-      zoom: zoom
+      zoom: zoom,
+      toJSON: toJSON,
+      fromJSON: fromJSON
     }  
   };
 })();
