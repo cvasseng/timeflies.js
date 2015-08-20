@@ -30,7 +30,7 @@
       }
       
       svg {
-        /*background-color:#0157AB;*/
+        cursor: crosshair;
       }
       
      </style>
@@ -51,6 +51,70 @@
       var sequencer = tf.Sequencer(document.body, {
         initialLanes: 10
       });
+      
+      //We need a separate mover for SVG nodes..
+      function SVGMover(handle, opos) {
+        var events = tf.events(),
+            moving = false,
+            delta = {x: 0, y: 0},
+            pos = {x: 0, y: 0},
+            opos = {x: 0, y: 0}
+        ;
+      
+        if (!handle) {
+          handle = target;
+        }
+      
+        tf.on(handle, 'mousedown', function (e) {
+          var upper, 
+              mover
+          ;
+      
+          if (e.shiftKey) {
+            return;
+          }
+      
+          opos = {
+            x: handle.x.baseVal.value,
+            y: handle.y.baseVal.value 
+          };
+      
+          delta.x = e.clientX;
+          delta.y = e.clientY;
+      
+          moving = true;
+      
+          upper = tf.on(document.body, 'mouseup', function (e) {
+            upper();
+            mover();
+      
+            events.emit('Done', pos.x, pos.y);
+            
+            moving = false;
+            return tf.nodefault(e);
+          });
+      
+          mover = tf.on(document.body, 'mousemove', function (e) {
+            if (moving) {
+              pos.x = opos.x + (e.clientX - delta.x);
+              pos.y = opos.y + (e.clientY - delta.y);
+              if (pos.x < 0) pos.x = 0;
+                   
+              handle.setAttributeNS(null, 'x', pos.x); 
+              handle.setAttributeNS(null, 'y', pos.y); 
+                                 
+              events.emit('Moving', pos.x, pos.y);
+            }
+            return tf.nodefault(e);
+          });
+      
+          return tf.nodefault(e);
+        });
+      
+        return {
+          on: events.on
+        };
+      };
       
       //Add a custom block to the block pool
       tf.RegisterBlockType('LERP', {
@@ -74,31 +138,46 @@
           //Sort the keyframes
           function sort(self) {
             self.keyframes = self.keyframes.sort(function (a, b) {
+              if (a.v > 1) a.v = 1;
+              if (b.v > 1) b.v = 1;
+              if (a.v < -1) a.v = -1;
+              if (b.v < -1) b.v = -1;
+              
               return a.t > b.t;
             });
+            if (self.keyframes.length > 0) {
+              self.keyframes[0].t = 0;
+            }
+            if (self.keyframes.length > 1) {
+              self.keyframes[self.keyframes.length - 1].t = 1;
+            }
           }
           
           //Build the UI
           function build(self) {
             var width = tf.size(parent).w - 10,
-                height = tf.size(parent).h,
+                height = tf.size(parent).h - 10,
                 last = false
-           ;
+            ;
+           
+            listeners = listeners.filter(function (fn) {
+              fn(); return false;
+            });
             
             svg.innerHTML = '';
             
+            //Draw zero line
+            SVGLine(0, height / 2, width, height / 2, 'dotted');
+                        
             self.keyframes.forEach(function (frame) {
               var y, 
                   x =  (frame.t * width), 
                   n, 
                   line = false,
                   prev,
-                  mover,
-                  max = 10,
-                  min = -10
+                  mover                
               ;
-              
-              
+                            
               //We assume that 50% is 0, 100% is min, 0% is max
               y = frame.v / height;
       
@@ -107,8 +186,7 @@
                 y = (height / 2) + (-(frame.v) * (height / 2));
               } else {
                 y = (1 - frame.v) * (height / 2);
-              }
-              
+              }              
               
               //Create the line
               if (last) {
@@ -117,12 +195,33 @@
       
               //Create the node for the frame
               n = SVGKeyFrame(x, y);
+              n.style.cursor = 'move';
               //Hover text for the frame
               n.setAttributeNS(null, 'title', 't = ' + frame.t + ' v = ' + frame.v);                           
               
-              tf.Mover(n, n);
+              mover = SVGMover(n, {
+                x: x,
+                y: y
+              });
               
+              mover.on('Moving', function (x, y) {
+                frame.t = x / width;
+                
+                if (frame.t < 0) frame.t = 0;
+                if (frame.t > 1) frame.t = 1;
+                
+                if (y > 0 && y <  (height / 2)) {
+                  frame.v = 1 - (  y / (height / 2) );
+                } else if (y >= (height / 2)) {
+                  frame.v = -( ( (y - (height / 2)) / (height / 2)));
+                }                
+              });
               
+              mover.on('Done', function () {
+                sort(self);
+                build(self);
+              });
+                            
               last = {
                 line: line,
                 x: x,
@@ -140,17 +239,22 @@
             node.setAttributeNS(null, 'fill', '#FFF');
             node.setAttributeNS(null, 'stroke', 'none');
             tf.ap(svg, node);
-            return node;
+            return function (txt) {
+              node.setAttributeNS(null, 'text', text); 
+            };
           }
       
           //Helper function to draw a line
-          function SVGLine(x1, y1, x2, y2) {
+          function SVGLine(x1, y1, x2, y2, style) {
             var node = document.createElementNS(svgNS, 'line');
             node.setAttributeNS(null, 'x1', x1);
             node.setAttributeNS(null, 'x2', x2);
             node.setAttributeNS(null, 'y1', y1);
             node.setAttributeNS(null, 'y2', y2);
-            node.setAttributeNS(null, 'stroke', '#FFF');
+            node.setAttributeNS(null, 'stroke', '#FFF');              
+            if (style) {
+              node.setAttributeNS(null, 'stroke-dasharray', '5, 5');                            
+            }
             tf.ap(svg, node);
             return node;
           }
@@ -169,7 +273,8 @@
           
           //Create a UI for the editor
           var svgNS = 'http://www.w3.org/2000/svg',
-              svg = document.createElementNS(svgNS,'svg')
+              svg = document.createElementNS(svgNS,'svg'),
+              listeners = []
           ;
           
           //Need to set some properties to the svg node
@@ -182,15 +287,37 @@
           
           //Call build when resizing
           on('Resize', build);
-          
+                              
           //Attach event listener to the canvas
-          
+          tf.on(svg, 'dblclick', function (e) {
+            //Add a new keyframe            
+            var size = tf.size(parent),
+                x = e.offsetX,
+                y = e.offsetY,
+                f = {
+                  t: x / size.w
+                }
+            ;
+            
+            if (y > 0 && y <  (size.h / 2)) {
+              f.v = 1 - (  y / (size.h / 2) );
+            } else if (y >= (size.h / 2)) {
+              f.v = -( ( (y - (size.h / 2)) / (size.h / 2)));
+            }
+            
+            this.keyframes.push(f);            
+            sort(this);
+            build(this);
+            
+            return tf.nodefault(e);
+          }, this);
+                              
           //Append the UI to the block node
           tf.ap(parent,
              svg
           );          
         },
-        process: function (blockTime) {
+        process: function (blockTime, setTitle) {
           //Linear interpolation
           function lerp(a, b, f) {
             return (a * (1 - f)) + (b * f);
@@ -215,7 +342,8 @@
           this.toKey = this.keyframes[this.toKey];
           
           //Calulate the current value
-          value = lerp(from.v, to.v, (t - from.t) / (to.t - from.t));
+          value = lerp(this.fromKey.v, this.toKey.v, (blockTime - this.fromKey.t) / (this.toKey.t - this.fromKey.t));
+          setTitle(value);
         }
       });
      
@@ -230,6 +358,14 @@
       });
       
       tf.ap(document.body, test);
+      
+      tf.ap(document.body, 
+        tf.Draggable(tf.cr('div', 'draggable', 'Drag me too!'), 'block', {          
+         type: 'Normal Block'
+        }).target        
+      );
+      
+      tf.RegisterBlockType('Normal Block', {});
       
       //Set the time to 0
       sequencer.setTime(0);

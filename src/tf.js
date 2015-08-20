@@ -73,7 +73,7 @@ var tf = {
   },
   
   //Attach a listener to one or more DOM nodes
-  on: function (target, event, func) {
+  on: function (target, event, func, ctx) {
    var s = [];
     
     if (target && target.forEach) {
@@ -89,7 +89,7 @@ var tf = {
 
     function callback() {
       if (func) {
-        return func.apply(undefined, arguments);
+        return func.apply(ctx, arguments);
       }
       return;
     }
@@ -121,8 +121,24 @@ var tf = {
   //Merge two objects
   merge: function (a, b) {
     if (!a || !b) return a || b;    
-    Object.keys(b).forEach(function (key) {
-      a[key] = b[key];
+    Object.keys(b).forEach(function (bk) {
+     if (tf.isNull(b[bk]) || tf.isBasic(b[bk])) {
+        a[bk] = b[bk];
+     } else if (tf.isArr(b[bk])) {
+       
+       a[bk] = [];
+       
+       b[bk].forEach(function (i) {
+         if (tf.isNull(i) || tf.isBasic(i)) {
+           a[bk].push(i);
+         } else {
+           a[bk].push(tf.merge({}, i));
+         }
+       });
+       
+     } else {
+        a[bk] = tf.merge({}, b[bk]);
+      }
     });    
     return a;
   },
@@ -140,6 +156,38 @@ var tf = {
       x: node.offsetLeft,
       y: node.offsetTop
     }
-  }
+  },
   
+  isNull: function (what) {
+    return (typeof what === 'undefined' || what == null);
+  },
+  
+  isStr: function (what) {
+    return (typeof what === 'string' || what instanceof String);
+  },
+  
+  // Returns true if what is a number
+  isNum: function(what) {
+    return !isNaN(parseFloat(what)) && isFinite(what);
+  },
+  
+  // Returns true if what is a function
+  isFn: function (what) {
+    return (what && (typeof what === 'function') || (what instanceof Function));
+  },
+  
+  //Returns true if what is an array
+  isArr: function (what) {
+    return (!tf.isNull(what) && what.constructor.toString().indexOf("Array") > -1);
+  },
+
+  //Returns true if what is a bool
+  isBool: function (what) {
+    return (what === true || what === false);
+  },
+  
+  //Returns true if what is a basic type 
+  isBasic: function (what) {
+    return !tf.isArr(what) && (tf.isStr(what) || tf.isNum(what) || tf.isBool(what) || tf.isFn(what));
+  }
 };

@@ -54,6 +54,7 @@ SOFTWARE.
     }));
 
     return {
+      target: target,
       on: events.on
     }
   }

@@ -1,6 +1,6 @@
 # timeflies.js
 
-![Screenshot](screenshots/alpha.png)
+![Screenshot](screenshots/alpha2.png)
 
 **Timeline/sequencer UI Widget**
 

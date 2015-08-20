@@ -94,7 +94,7 @@ SOFTWARE.
           width: size.w - 10 + 'px',
           height: tf.size(node).h - 25 + 'px'
         });
-        events.emit('Resize', proto.state);
+        events.emit('Resize', pinterface.state);
       }
       
       pinterface.resizeBody = resizeBody;
@@ -157,7 +157,9 @@ SOFTWARE.
         if (!proto) return;
         
         //Calculate block time in [0..1] range
-        proto.process.apply(pinterface.state, [(timeMs - pinterface.start) / pinterface.length]);
+        proto.process.apply(pinterface.state, [(timeMs - pinterface.start) / pinterface.length, function (txt) {
+          title.innerHTML = pinterface.type + ': ' + txt;
+        }]);
       };
       
       //Recalculate the x and width based on zoom factor
@@ -172,7 +174,7 @@ SOFTWARE.
       /////////////////////////////////////////////////////////////////////////
       
       pinterface.recalc();    
-          
+                     
       tf.Draggable(node, 'block-move', pinterface).on('Drop', function () {
         //So we need to destroy this thing. 
         pinterface.destroy(); 
@@ -226,6 +228,7 @@ SOFTWARE.
       
       //Add a block
       function addBlock(b) {
+        b.resizeBody();
         blocks.push(b);
         b.on('Destroy', function () {
           events.emit('RemoveBlock', b); 
