@@ -204,7 +204,11 @@ SOFTWARE.
       //Add a block
       function addBlock(b) {
         blocks.push(b);
-        b.on('Destroy', removeBlock);
+        b.on('Destroy', function () {
+          blocks = blocks.filter(function (block) {
+            return b.id === block.id;
+          });  
+        });
       }
       
       //Add a block on a given time

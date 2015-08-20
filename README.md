@@ -41,6 +41,8 @@ After starting the server as descripted above, go to e.g. `http://127.0.0.1:3050
 **Creating a timeline control**
     
     var timeline = tf.Sequencer(document.body);
+
+The first argument is the DOM node to attach to.
     
 **A note on events**
 
@@ -48,7 +50,6 @@ Most things emit events which can be listened to using the `on(event, callback)`
 This function returns a function that can be called to unsubscribe from the event.
 Details on which events are available can be found below.
     
-The first argument is the DOM node to attach to.
 
 **Adding custom blocks**
     
