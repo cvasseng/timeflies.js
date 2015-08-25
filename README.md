@@ -10,7 +10,7 @@ Suggested use cases include:
   * Cutscene composing for games/real-time stuff
   
 **Features**
-  * Lightweight: weighs in at less than 12kb minified
+  * Lightweight: weighs in at less than 15kb minified
   * No dependencies. Just drop it into your project, and you're good to go
   * Easy to skin (look at [./less/light.less](less/light.less) to see how)
   * Supports composite blocks, meaning you can add your own block types easily, with (optionally) their own UI inside the block (e.g. a spline editor block)    

@@ -239,6 +239,7 @@ SOFTWARE.
       resizer.on('Done', function () {
         focus();
         checkIfNewStop();
+        events.emit('Resized');
       });
       
       mover.on('Moving', function (x, y) {
@@ -250,6 +251,7 @@ SOFTWARE.
       mover.on('Done', function () {
         focus();
         checkIfNewStop();
+        events.emit('Moved');
       });
       
       if (parent) {
@@ -285,12 +287,18 @@ SOFTWARE.
       function addBlock(b) {
         b.resizeBody();
         blocks.push(b);
+        
         b.on('Destroy', function () {
           events.emit('RemoveBlock', b); 
           blocks = blocks.filter(function (block) {
             return b.id === block.id;
           });  
         });
+        
+        //Keep blocks sorted
+        b.on('Moved', sort);
+        b.on('Resized', sort);        
+        sort();
       }
       
       //Add a block on a given time
@@ -336,8 +344,11 @@ SOFTWARE.
       
       //Process lane - naive implementation. TODO: sorting, culling, etc.
       function process(timeMs) {
-        blocks.forEach(function (b) {
-          b.process(timeMs);
+        blocks.some(function (b) {
+          if (b.start - 10 > timeMs) {
+            return true;
+          }
+          b.process(timeMs);            
         });
       }
       
