@@ -60,7 +60,8 @@ SOFTWARE.
         }, attrs),
         selectedBlock = false,
         stopTime = 0,
-        startTime = 50000
+        startTime = 50000,
+        looping = false
     ;
   
     //Create a block
@@ -231,6 +232,7 @@ SOFTWARE.
       resizer.on('Done', function () {
         focus();
         events.emit('Resized');
+        calcStartEnd();
       });
       
       mover.on('Moving', function (x, y) {
@@ -242,6 +244,7 @@ SOFTWARE.
       mover.on('Done', function () {
         focus();
         events.emit('Moved');
+        calcStartEnd();
       });
       
       if (parent) {
@@ -578,7 +581,14 @@ SOFTWARE.
         if (isPlaying && tf.isFn(requestAnimationFrame)) {
           requestAnimationFrame(frame);
         }
+        
+        if (looping && currentTime > stopTime) {
+          gotoStart();
+        }
       }
+      
+      //Calc end in case we're looping
+      calcEnd();
       
       pause(); //Just to clear intervals
       playingOffset = (new Date()).getTime() - currentTime;
@@ -608,7 +618,7 @@ SOFTWARE.
       }
     }
     
-    function gotoStart() {
+    function calcStart() {
       startTime = 500000;
       lanes.forEach(function (lane) {
         if (lane.count() > 0) {
@@ -617,13 +627,9 @@ SOFTWARE.
           }
         }        
       });
-      
-      currentTime = startTime;
-      setMarker(currentTime);
-      updatePlayOffset();
     }
     
-    function gotoEnd() {
+    function calcEnd() {
       stopTime = 0;
       lanes.forEach(function (lane) {
         if (lane.count() > 0) {
@@ -633,7 +639,22 @@ SOFTWARE.
           }
         }         
       });
-      
+    }
+    
+    function calcStartEnd() {
+      calcStart();
+      calcEnd();
+    }
+    
+    function gotoStart() {      
+      calcStart();
+      currentTime = startTime;
+      setMarker(currentTime);
+      updatePlayOffset();
+    }
+    
+    function gotoEnd() {
+      calcEnd();      
       currentTime = stopTime;
       setMarker(currentTime);
       updatePlayOffset();
@@ -690,6 +711,8 @@ SOFTWARE.
       gotoStart: gotoStart,
       gotoEnd: gotoEnd,
       
+      looping: function (flag) {looping = flag; calcEnd();},
+      isLooping: function () {return looping;},
       isPlaying: function () { return isPlaying;},
       time: function () {return currentTime;},
       zoomFactor: function () {return zoomFactor;},

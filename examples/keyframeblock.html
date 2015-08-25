@@ -68,6 +68,7 @@
        <button onclick="sequencer.gotoStart()">&lt;&lt;</button>
         <button onclick="sequencer.play()">PLAY</button>
         <button onclick="sequencer.pause()">PAUSE</button>
+        <button onclick="sequencer.looping(!sequencer.isLooping());sequencer.isLooping() ? this.innerHTML = 'DISABLE LOOPING' : this.innerHTML = 'ENABLE LOOPING';">ENABLE LOOPING</button>
         <button onclick="sequencer.gotoEnd()">&gt;&gt;</button>
       </div>
       

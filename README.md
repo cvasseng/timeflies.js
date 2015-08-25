@@ -97,6 +97,8 @@ Details on which events are available can be found below.
   * `zoomFactor()`: returns the current zoom factor
   * `gotoStart()`: goto the start of the sequence
   * `gotoEnd()`: goto the end of the sequence
+  * `looping(true | false)`: enable/disable looping of the sequence when playing
+  * `isLooping()`: returns the current loop state  
     
 *Events*
   * `Addlane : lane`: emitted when a lane is added    
