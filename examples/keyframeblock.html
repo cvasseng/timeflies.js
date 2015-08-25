@@ -57,17 +57,18 @@
    
     </head>
     <body>
-      <div style="padding:4px;">
+      <div style="padding:4px;font-size:12px;">
         <!-- Zoom slider (may not render correctly in certain browsers) -->      
-        -<input type="range" max="400" min="1" value="400" onchange="doZoom(this);"/>+   
-       <button onclick="sequencer.gotoStart()">&lt;&lt;</button>
-        <button onclick="sequencer.play()">PLAY</button>
-        <button onclick="sequencer.pause()">PAUSE</button>
-        <button onclick="sequencer.gotoEnd()">&gt;&gt;</button> <br/>
         All Keyframe-blocks are connected to the same object.
         Hold shift to select a keyframe. Move it by dragging.
         Right-click keyframe to delete it.
         Move the red rectangle to where you want it on a spesific time, and click "ADD KEYFRAME".
+        Note that you have to resize lanes in order to see the UI.<br/>
+        -<input type="range" max="400" min="1" value="400" onchange="doZoom(this);"/>+   
+       <button onclick="sequencer.gotoStart()">&lt;&lt;</button>
+        <button onclick="sequencer.play()">PLAY</button>
+        <button onclick="sequencer.pause()">PAUSE</button>
+        <button onclick="sequencer.gotoEnd()">&gt;&gt;</button>
       </div>
       
       <div id="sequencer" class="sequencer tf-box-size"></div>

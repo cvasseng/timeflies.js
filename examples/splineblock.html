@@ -18,15 +18,16 @@
         padding:0;
         margin:0;
         background:#FFF;  
+        font-family:'Roboto';
       }     
       
       .draggable {
-        fontFamily: 'Roboto';
         background:#333;
         color: #FFF;
         padding:4px;
         width: 200px;
-        textAlign: center;  
+        text-align: center;  
+        margin:2px;
       }
       
       svg {
@@ -37,14 +38,24 @@
    
     </head>
     <body>
-      <!-- Zoom slider (may not render correctly in certain browsers) -->
-      -<input type="range" max="100" min="1" value="100" onchange="doZoom(this);"/>+   
+     <div style="padding:4px;font-size:12px;">
+        <!-- Zoom slider (may not render correctly in certain browsers) -->      
+        Double click in a spline block to add a key. Right click to delete key.
+        Move key by dragging.
+        Note that you have to resize lanes in order to see the UI.
+        <br/>
+        -<input type="range" max="100" min="1" value="400" onchange="doZoom(this);"/>+   
+        <button onclick="sequencer.gotoStart()">&lt;&lt;</button>
+        <button onclick="sequencer.play()">PLAY</button>
+        <button onclick="sequencer.pause()">PAUSE</button>
+        <button onclick="sequencer.gotoEnd()">&gt;&gt;</button>
+      </div>
     </body>
     <script>
       
       //Zoom the sequencer
       function doZoom(sender) {
-        sequencer.zoom(parseFloat(100 - parseInt(sender.value, 10)) / 10);  
+        sequencer.zoom(100 - parseInt(sender.value, 10));  
       }
       
       //Create a sequencer instance, and add it to document.body
@@ -134,6 +145,15 @@
           //Current value
           value: 0
         },
+        //Non-persistent session storage - can be used
+        //to store references to stuff that can't be serialized,
+        //e.g. a handle to a 3d-model, sound clip, dom nodes, etc.
+        memory: {
+          
+        },
+        inspectables: {
+          keyframes: 'Keyframes'
+        },
         construct: function (parent, on) {
           //Sort the keyframes
           function sort(self) {
@@ -167,7 +187,7 @@
             svg.innerHTML = '';
             
             //Draw zero line
-            SVGLine(0, height / 2, width, height / 2, 'dotted');
+            SVGLine(0, height / 2, width + 10, height / 2, 'dotted');
                         
             self.keyframes.forEach(function (frame) {
               var y, 
@@ -205,8 +225,10 @@
               });
               
               listeners.push(tf.on(n, 'contextmenu', function (e) {
+                if (self.keyframes.length === 1) return tf.nodefault(e);
+                
                 self.keyframes = self.keyframes.filter(function (f) {
-                  return frame.v != f.v && frame.t != f.t;                  
+                  return frame !== f;                  
                 });
                 sort(self);
                 build(self);
@@ -326,7 +348,7 @@
              svg
           );          
         },
-        process: function (blockTime, setTitle) {
+        process: function (blockTime, changed, setTitle) {
           //Linear interpolation
           function lerp(a, b, f) {
             return (a * (1 - f)) + (b * f);
@@ -360,7 +382,7 @@
       setInterval(sequencer.process, 100);
       
       //Create a draggable div that creates a My Block Type block on the lane it's dropped on
-      var test = tf.cr('div', 'draggable', 'Drag me to a lane!');
+      var test = tf.cr('div', 'draggable', 'Drag to get spline!');
       
       tf.Draggable(test, 'block', {
         type: 'LERP'
