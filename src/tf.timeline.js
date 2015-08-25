@@ -461,14 +461,18 @@ SOFTWARE.
       events.emit('Zoom', zoomFactor);
     }        
     
+    function updatePlayOffset() {
+      if (isPlaying) { //Adjust the play offset
+         playingOffset = (new Date()).getTime() - currentTime;
+      }
+    }
+    
     function setTime(t, callout) {
       //Need to scroll + set marker position
       currentTime = t;
       setMarker(t);
       
-      if (isPlaying) { //Adjust the play offset
-         playingOffset = (new Date()).getTime() - currentTime;
-      }
+      updatePlayOffset();
       
       events.emit('SetTime', currentTime);
     }
@@ -558,11 +562,13 @@ SOFTWARE.
     function gotoStart() {
       currentTime = startTime;
       setMarker(currentTime);
+      updatePlayOffset();
     }
     
     function gotoEnd() {
       currentTime = stopTime;
       setMarker(currentTime);
+      updatePlayOffset();
     }
     
     
