@@ -95,6 +95,8 @@ Details on which events are available can be found below.
   * `isPlaying()`: returns the current playback state
   * `time()`: returns the current time in milliseconds
   * `zoomFactor()`: returns the current zoom factor
+  * `gotoStart()`: goto the start of the sequence
+  * `gotoEnd()`: goto the end of the sequence
     
 *Events*
   * `Addlane : lane`: emitted when a lane is added    

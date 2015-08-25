@@ -37,8 +37,10 @@
       <div style="padding:4px;">
         <!-- Zoom slider (may not render correctly in certain browsers) -->      
         -<input type="range" max="400" min="1" value="400" onchange="doZoom(this);"/>+   
+       <button onclick="sequencer.gotoStart()">&lt;&lt;</button>
         <button onclick="sequencer.play()">PLAY</button>
         <button onclick="sequencer.pause()">PAUSE</button>
+        <button onclick="sequencer.gotoEnd()">&gt;&gt;</button>
       </div>
       
     

@@ -58,7 +58,9 @@ SOFTWARE.
         properties = tf.merge({
           initialLanes: 10
         }, attrs),
-        selectedBlock = false
+        selectedBlock = false,
+        stopTime = 0,
+        startTime = 50000
     ;
   
     //Create a block
@@ -123,6 +125,16 @@ SOFTWARE.
         };
         
         events.emit('Focus');
+      }
+      
+      function checkIfNewStop() {
+        if (pinterface.start + pinterface.length > stopTime) {
+          stopTime = pinterface.start + pinterface.length;
+        }
+        
+        if (pinterface.start < startTime) {
+          startTime = pinterface.start;
+        }
       }
       
       pinterface.resizeBody = resizeBody;
@@ -224,20 +236,28 @@ SOFTWARE.
         resizeBody();
       });
       
-      resizer.on('Done', focus);
+      resizer.on('Done', function () {
+        focus();
+        checkIfNewStop();
+      });
       
       mover.on('Moving', function (x, y) {
         //Recalc start
         pinterface.start = x * zoomFactor;
+        
       });
       
-      mover.on('Done', focus);
+      mover.on('Done', function () {
+        focus();
+        checkIfNewStop();
+      });
       
       if (parent) {
         tf.ap(parent, node);
       }
       
       constructProto();
+      checkIfNewStop();
       
       return pinterface;
     }
@@ -535,6 +555,17 @@ SOFTWARE.
       }
     }
     
+    function gotoStart() {
+      currentTime = startTime;
+      setMarker(currentTime);
+    }
+    
+    function gotoEnd() {
+      currentTime = stopTime;
+      setMarker(currentTime);
+    }
+    
+    
     /////////////////////////////////////////////////////////////////////////////
            
     tf.ap(container, 
@@ -582,6 +613,8 @@ SOFTWARE.
       fromJSON: fromJSON,
       play: play,
       pause: pause,
+      gotoStart: gotoStart,
+      gotoEnd: gotoEnd,
       
       isPlaying: function () { return isPlaying;},
       time: function () {return currentTime;},
