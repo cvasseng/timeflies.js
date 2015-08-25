@@ -90,6 +90,7 @@ SOFTWARE.
       ;
       
       function constructProto() {
+        body.innerHTML = '';
         if (proto) {
           if (Object.keys(pinterface.state).length !== Object.keys(proto.state).length) {
             var curr = tf.merge({}, pinterface.state);
@@ -138,6 +139,7 @@ SOFTWARE.
       }
       
       pinterface.resizeBody = resizeBody;
+      pinterface.reinit = constructProto();
           
       //Serialize block to JSON
       pinterface.toJSON = function () {
@@ -344,10 +346,10 @@ SOFTWARE.
       
       //Process lane - naive implementation. TODO: sorting, culling, etc.
       function process(timeMs) {
-        blocks.some(function (b) {
-          if (b.start - 10 > timeMs) {
-            return true;
-          }
+        blocks.forEach(function (b) {
+          // if (b.start - 10 > timeMs) {
+          //   return true;
+          // }
           b.process(timeMs);            
         });
       }
