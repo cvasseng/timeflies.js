@@ -87,7 +87,7 @@ Details on which events are available can be found below.
   * `resize()`: resizes the timeline control to fit its parent
   * `setTime(timeMS)`: set the current time in milliseconds
   * `process()`: process the timeline, activates any blocks intersecting with the current time
-  * `zoom(factor)`: set zoom factor. Factor is number of milliseconds per. pixel
+  * `zoom(factor)`: set zoom factor. Factor is number of milliseconds per. pixel e.g. 1 means 1 pixel = 1 milliseconds, and 1000 means 1 pixel = 1 second
   * `toJSON()`: serialize the timeline to a JSON object
   * `fromJSON(obj)`: unserialize the timeline from a JSON object
   * `play()`: start playing back the sequence from current time
@@ -110,7 +110,7 @@ Details on which events are available can be found below.
   * `addBlockAtTime(timems, attributes`: add a block on a given time
   * `body`: the body DOM node for the lane
   * `on(event, callback)`: attach an event listener to the lane
-  * `scrollTo(pos)`: scroll to a given pixel e.g. 1 means 1 pixel = 1 milliseconds, and 1000 means 1 pixel = 1 second
+  * `scrollTo(pos)`: scroll to a given pixel 
   * `process(timeMs)`: process the lane with the time supplied
   * `zoomUpdate`: updates the positions of all the child blocks to fit the current zoom factor
   * `toJSON()`: serializes the lane to a JSON object

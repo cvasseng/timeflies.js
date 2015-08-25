@@ -110,6 +110,21 @@ SOFTWARE.
         title.innerHTML = pinterface.type + ': ' + txt;
       }
       
+      function focus() {
+        if (selectedBlock) {
+          selectedBlock.node.className = selectedBlock.node.className.replace(' block-focused', '');
+        }
+        
+        node.className += ' block-focused';
+        
+        selectedBlock = {
+          node: node,
+          block: pinterface
+        };
+        
+        events.emit('Focus');
+      }
+      
       pinterface.resizeBody = resizeBody;
           
       //Serialize block to JSON
@@ -148,7 +163,7 @@ SOFTWARE.
         if (timeMs < pinterface.start || timeMs > pinterface.start + pinterface.length) {
           if (isProcessing) {
             //We just stopped processing, so remove the "active" class
-            node.className = 'block tl-transition-color';
+            node.className = node.className.replace(' block-active', '');
             if (proto) {
               proto.stopProcess.apply(pinterface.state, [timeMs - pinterface.start]);
             }
@@ -159,7 +174,7 @@ SOFTWARE.
                         
         if (!isProcessing) {
           //We just started processing, so add the "active" class
-          node.className = 'block tl-transition-color block-active';
+          node.className += ' block-active';
           if (proto) {
             proto.startProcess.apply(pinterface.state, [timeMs - pinterface.start]);
           }
@@ -185,11 +200,7 @@ SOFTWARE.
           width: size.w + 'px'
         }); 
       };
-      
-      function focus() {
-        selectedBlock = pinterface;
-      }
-      
+                  
       /////////////////////////////////////////////////////////////////////////
       
       pinterface.recalc();    
@@ -575,7 +586,7 @@ SOFTWARE.
       isPlaying: function () { return isPlaying;},
       time: function () {return currentTime;},
       zoomFactor: function () {return zoomFactor;},
-      selectedBlock: function () {return selectedBlock;}
+      selectedBlock: function () {return selectedBlock ? selectedBlock.block : false;}
     }  
   };
 })();
