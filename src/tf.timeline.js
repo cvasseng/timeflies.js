@@ -47,7 +47,6 @@ SOFTWARE.
         container = tf.cr('div', 'timeline-js'),     
         timeContainer = tf.cr('div', 'tl-time-indicator'),
         timeMarker = tf.cr('div', 'tl-time-marker'),
-        scrollBar = tf.cr('div'),
         laneBox = tf.cr('div', 'tl-lane-container'),
         lanes = [],
         bcount = 0,
@@ -321,7 +320,7 @@ SOFTWARE.
         if (type === 'block-move') {                
           addBlockAtPixel(e.clientX, payload);        
         } else {
-          addBlockAtPixel(e.clientX + scrollBar.scrollLeft, payload);        
+          addBlockAtPixel(e.clientX + laneBox.scrollLeft, payload);        
         }
       });
       
@@ -358,10 +357,14 @@ SOFTWARE.
     
     function resize() {
       var size = tf.size(container);
-     
+      
       tf.style(laneBox, {
         width: size.w + 'px',
-        height: (size.h - tf.size(scrollBar).h) + 'px'
+        height: (size.h - tf.size(timeContainer).h) + 'px'
+      });
+      
+      tf.style(timeContainer, {
+        width: size.w + 'px'
       });
       
       tf.style(timeMarker, {
@@ -392,7 +395,9 @@ SOFTWARE.
       
       lanes.forEach(function (lane) {
         lane.zoomUpdated();
-      });          
+      });         
+      
+      buildTimeIndicators(); 
     }        
     
     function setTime(t) {
@@ -407,7 +412,7 @@ SOFTWARE.
     
     function setMarker(time) {
       tf.style(timeMarker, {
-        left: (time / zoomFactor) - scrollBar.scrollLeft + 'px'
+        left: (time / zoomFactor) - laneBox.scrollLeft + 'px'
       });
     }
     
@@ -467,19 +472,23 @@ SOFTWARE.
       }
     }
     
-    /////////////////////////////////////////////////////////////////////////////
+    function buildTimeIndicators() {
+      timeContainer.innerHTML = '';
+      //So zoomFactor dictates pixels per. ms.
+      //We render in steps of 200px,
+      //Meaning that the number of ms are (zoomFactor * (i * 200))
+      for (var i = 0; i < 500; i++) {
+        tf.ap(timeContainer, tf.style(tf.cr('span', 'time', (zoomFactor * (i * 100)) / 1000 + 's'), {
+          left: i * 100 + 'px'
+        }));
+      }
+    }
     
-    tf.style(scrollBar, {
-      'overflow-x': 'scroll',
-      'overflow-y': 'hidden',
-      width: '100%'
-    });
+    /////////////////////////////////////////////////////////////////////////////
            
     tf.ap(container, 
       timeMarker,
-      tf.ap(scrollBar, 
-        timeContainer       
-      ),
+      timeContainer,      
       laneBox
     );
     
@@ -488,25 +497,21 @@ SOFTWARE.
       lanes.push(Lane(laneBox, 'Lane ' + i));
     }
    
-    for (var i = 0; i < 500; i++) {
-      tf.ap(timeContainer, tf.cr('span', 'time', i));
-    }
-    
     if (parent) {
       tf.ap(parent, container);
     }
     
     tf.on(timeContainer, 'click', function (e) {      
-      setTime((e.clientX + scrollBar.scrollLeft) * zoomFactor);
+      setTime((e.clientX + laneBox.scrollLeft) * zoomFactor);
     });
     
-    tf.on(scrollBar, 'scroll', function (e) {
-      laneBox.scrollLeft = scrollBar.scrollLeft;
-      timeContainer.scrollLeft = scrollBar.scrollLeft;
+    tf.on(laneBox, 'scroll', function (e) {
+      timeContainer.scrollLeft = laneBox.scrollLeft;
       setMarker(currentTime);
     });
     
     resize(); 
+    zoom(1);
   
     //Public interface
     return {
