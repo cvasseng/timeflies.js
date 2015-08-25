@@ -2,7 +2,7 @@
 
 ![Screenshot](screenshots/alpha2.png)
 
-**Timeline/sequencer UI Widget**
+**JavaScript Timeline/sequencer UI Widget**
 
 Suggested use cases include:
   * Sequencing sound
@@ -12,20 +12,21 @@ Suggested use cases include:
 **Features**
   * Lightweight: weighs in at less than 12kb minified
   * No dependencies. Just drop it into your project, and you're good to go
-  * Easy to skin (look at `./less/light.less` to see how)
+  * Easy to skin (look at [./less/light.less](less/light.less) to see how)
   * Supports composite blocks, meaning you can add your own block types easily, with (optionally) their own UI inside the block (e.g. a spline editor block)    
   * Supports drag 'n dropping blocks onto lanes
   * Zooming
   * Blocks are freeform, and can be moved across lanes (by holding shift and dragging), moved (by dragging), and resized (by grabbing the resize handle on the far-right)  
   * Lanes can be vertically resized interactively, to make room for e.g. a spline editor inside a block
+  * Liberally licensed    
       
 #Building
  
- To build timeflies.js, you need bakor installed. Bakor is a node module, 
- and must be installed globally, i.e. `npm install -g bakor`.
- Once installed, build by running `bakor` in the timeflies.js root directory.
- 
- This will produce a set of files in `./build/` which can be included in your application.
+To build timeflies.js, you need [bakor](https://github.com/iqumulus/bakor/) installed. Bakor is a node module, 
+and must be installed globally, i.e. `npm install -g bakor`.
+Once installed, build by running `bakor` in the timeflies.js root directory.
+
+This will produce a set of files in the `./build/` directory which can be included in your application.
  
 #Examples
 
@@ -34,7 +35,7 @@ To use this, first run `npm install` in the root directory (or `sudo npm install
 This will start an HTTP server serving up the examples-folder on port `3050`. Note that you **have to** run this server for the examples to work
 properly, as they use the "unbuilt" sources - both for the JavaSript, and for the CSS. 
  
-After starting the server as descripted above, go to e.g. `http://127.0.0.1:3050/helloworld.html` in your browser. 
+After starting the server as descripted above, go to [http://127.0.0.1:3050/helloworld.html](http://127.0.0.1:3050/helloworld.html) in your browser for a full listing of examples.
  
 #Usage
 
@@ -95,8 +96,12 @@ Details on which events are available can be found below.
   * `time()`: returns the current time in milliseconds
   * `zoomFactor()`: returns the current zoom factor
     
- *Events*
+*Events*
   * `Addlane : lane`: emitted when a lane is added    
+  * `Play : time`: emitted when starting to play the sequence
+  * `Pause : time`: emitted when stopping playback
+  * `SetTime : time`: emitted when the time is **manually** set by moving the time marker
+  * `Zoom : factor`: emitted when the sequencer's zoom factor changes
     
 **Lane Interface**
   * `removeBlock(id)`: remove a block from the lane
@@ -114,6 +119,7 @@ Details on which events are available can be found below.
 *Events*
   * `AddBlock : <block instance>`: emitted when a new block is added to the lane
   * `RemoveBlock : <block>`: emitted when a block is removed from the lane
+  * `Destroy`: emitted when the lane is destroyed
 
 **Adding Blocks**
 

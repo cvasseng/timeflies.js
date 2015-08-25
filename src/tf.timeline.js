@@ -242,12 +242,13 @@ SOFTWARE.
           dropTarget = tf.DropTarget(body, 'block block-move'),
           blocks = []        
       ;           
-      
-      resizer.on('Done', function () {
-        blocks.forEach(function (b) {
-          b.resizeBody();
+            
+      //Sort blocks
+      function sort() {
+        blocks = blocks.sort(function (a, b) {
+          return a.start > b.start;
         });
-      });
+      }
       
       //Add a block
       function addBlock(b) {
@@ -293,13 +294,13 @@ SOFTWARE.
       //Set scroll position
       function scrollTo(x) {
         body.scrollLeft = x;
-        console.log(body.scrollLeft + ' ' + body.scrollWidth + ' ' + x);
       }
       
       //Destroy the lane
       function destroy() {       
         container.parentNode.removeChild(container);
         container.innerHTML = '';
+        events.emit('Destroy');
       }
       
       //Process lane - naive implementation. TODO: sorting, culling, etc.
@@ -309,6 +310,7 @@ SOFTWARE.
         });
       }
       
+      //Called when zooming to recalc block pixel pos/size
       function zoomUpdated() {
         blocks.forEach(function (b) {
           b.recalc();
@@ -317,6 +319,7 @@ SOFTWARE.
       }
       
       function toJSON() {
+        sort();
         return blocks.map(function (b) {
           return b.toJSON();
         });
@@ -334,6 +337,12 @@ SOFTWARE.
       }
       
       /////////////////////////////////////////////////////////////////////////////         
+          
+      resizer.on('Done', function () {
+        blocks.forEach(function (b) {
+          b.resizeBody();
+        });
+      });          
           
       dropTarget.on('Drop', function (payload, type, e) {
         if (type === 'block-move') {                
@@ -417,6 +426,8 @@ SOFTWARE.
       });         
       
       buildTimeIndicators(); 
+      
+      events.emit('Zoom', zoomFactor);
     }        
     
     function setTime(t, callout) {
@@ -493,6 +504,7 @@ SOFTWARE.
       } else {
         playHandle = setInterval(frame, 50);
       }
+      events.emit('Play', currentTime);
     }
     
     function pause() {
@@ -500,6 +512,7 @@ SOFTWARE.
       if (!tf.isFn(requestAnimationFrame)) {
         clearInterval(playHandle);
       }
+      events.emit('Pause', currentTime);
     }
     
     function buildTimeIndicators() {
