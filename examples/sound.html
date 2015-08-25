@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>timeflies.js</title>
+
+    <link href='http://fonts.googleapis.com/css?family=Roboto:300,400,700' rel='stylesheet' type='text/css'>
+    <link href='./css/light.css' rel='stylesheet' type='text/css'>
+   
+    <script src="./src/tf.js"></script>
+    <script src="./src/tf.events.js"></script>
+    <script src="./src/tf.resizer.js"></script>
+    <script src="./src/tf.mover.js"></script>
+    <script src="./src/tf.dnd.js"></script>
+    <script src="./src/tf.timeline.js"></script>
+   
+    <style>     
+       html, body {
+        padding:0;
+        margin:0;
+        background:#FFF;  
+        font-family: Roboto;
+      }     
+      
+      .draggable {
+        fontFamily: 'Roboto';
+        background:#333;
+        color: #FFF;
+        padding:4px;
+        width: 200px;
+        textAlign: center;  
+      }
+  
+     </style>
+   
+    </head>
+    <body>
+      <div style="padding:4px;">
+        <!-- Zoom slider (may not render correctly in certain browsers) -->      
+        -<input type="range" max="400" min="1" value="400" onchange="doZoom(this);"/>+   
+        <button onclick="sequencer.play()">PLAY</button>
+        <button onclick="sequencer.pause()">PAUSE</button>
+      </div>
+      
+    
+    </body>
+    <script>
+      
+      //Super Simple audio block
+      tf.RegisterBlockType('Audio', {
+        state: {
+          file: 'schu.m4a',
+          lastTime: 0
+        },
+        construct: function (parent, on, inter, setTitle) {
+          this.audio = new Audio(this.file);
+          
+          sequencer.on('SetTime', function (t) {
+            this.audio.currentTime = (t - inter.start) / 1000;
+          }, this);
+          
+          setTitle(this.file);
+        },
+        stopProcess: function (timeMs) {
+          this.audio.pause();
+        },
+        startProcess: function (timeMs) {
+          this.audio.play();
+          this.audio.currentTime = this.lastTime = timeMs / 1000;
+        },
+        process: function (time, changed, setTitle, timeMs) {
+          if (!sequencer.isPlaying()) {
+            this.audio.pause();
+          } else if (this.audio.paused) {
+            this.audio.play();
+          }
+          this.lastTime = timeMs;                    
+        }
+      });
+     
+      //Zoom the sequencer
+      function doZoom(sender) {
+        sequencer.zoom(parseFloat(400 - parseInt(sender.value, 10)) / 10);  
+      }
+      
+      //Create a sequencer instance, and add it to document.body
+      var sequencer = tf.Sequencer(document.body, {
+        initialLanes: 10
+      });
+
+      //Proces the sequencer every 100ms (NOTE: should use requestAnimationFrame instead, with a fallback to setInterval)
+      setInterval(sequencer.process, 100);
+      
+      //Create a draggable div that creates a My Block Type block on the lane it's dropped on
+      tf.ap(document.body, 
+        tf.Draggable(tf.cr('div', 'draggable', 'Schuman'), 'block', {          
+         type: 'Audio',
+         state: {
+           file: 'schu.m4a'
+         }
+        }).target        
+      );
+      
+      tf.ap(document.body, 
+        tf.Draggable(tf.cr('div', 'draggable', 'Chime'), 'block', {          
+         type: 'Audio',
+         state: {
+           file: 'chime.m4a'
+         }
+        }).target        
+      );
+      
+      //Set the time to 0
+      sequencer.setTime(0);
+      //Resize the sequencer
+      sequencer.resize();
+      
+    </script>
+</html>
