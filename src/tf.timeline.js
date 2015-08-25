@@ -57,7 +57,8 @@ SOFTWARE.
         playHandle = 0,
         properties = tf.merge({
           initialLanes: 10
-        }, attrs)
+        }, attrs),
+        selectedBlock = false
     ;
   
     //Create a block
@@ -81,7 +82,9 @@ SOFTWARE.
           title = tf.cr('span', '', pinterface.type),
           resizer = tf.Resizer(sizer, node, 'X'),
           mover = tf.Mover(node, node, 'X'),
-          size = {w: 0, h: 0}
+          size = {w: 0, h: 0},
+          bTime = 0,
+          bTimeLast = 0
       ;
       
       function constructProto() {
@@ -161,9 +164,13 @@ SOFTWARE.
         if (!proto) return;
         
         //Calculate block time in [0..1] range
-        proto.process.apply(pinterface.state, [(timeMs - pinterface.start) / pinterface.length, function (txt) {
+        bTime = (timeMs - pinterface.start) / pinterface.length;
+        
+        proto.process.apply(pinterface.state, [bTime, bTime !== bTimeLast, function (txt) {
           title.innerHTML = pinterface.type + ': ' + txt;
         }]);
+        
+        bTimeLast = bTime;
       };
       
       //Recalculate the x and width based on zoom factor
@@ -174,6 +181,10 @@ SOFTWARE.
           width: size.w + 'px'
         }); 
       };
+      
+      function focus() {
+        selectedBlock = pinterface;
+      }
       
       /////////////////////////////////////////////////////////////////////////
       
@@ -198,10 +209,14 @@ SOFTWARE.
         resizeBody();
       });
       
+      resizer.on('Done', focus);
+      
       mover.on('Moving', function (x, y) {
         //Recalc start
         pinterface.start = x * zoomFactor;
       });
+      
+      mover.on('Done', focus);
       
       if (parent) {
         tf.ap(parent, node);
@@ -434,6 +449,15 @@ SOFTWARE.
     }
     
     function fromJSON(obj) {
+      if (tf.isStr(obj)) {
+        try {
+          obj = JSON.parse(obj);
+        } catch (e) {
+          throw e.toString();
+          return;
+        }
+      }
+      
       lanes = lanes.filter(function (l) {
         l.destroy();
         return false;
@@ -459,7 +483,7 @@ SOFTWARE.
       playingOffset = (new Date()).getTime() - currentTime;
       isPlaying = true;
       if (tf.isFn(requestAnimationFrame)) {
-        playHandle = requestAnimationFrame(frame);
+        requestAnimationFrame(frame);
       } else {
         playHandle = setInterval(frame, 50);
       }
@@ -474,9 +498,6 @@ SOFTWARE.
     
     function buildTimeIndicators() {
       timeContainer.innerHTML = '';
-      //So zoomFactor dictates pixels per. ms.
-      //We render in steps of 200px,
-      //Meaning that the number of ms are (zoomFactor * (i * 200))
       for (var i = 0; i < 500; i++) {
         tf.ap(timeContainer, tf.style(tf.cr('span', 'time', (zoomFactor * (i * 100)) / 1000 + 's'), {
           left: i * 100 + 'px'
@@ -497,6 +518,10 @@ SOFTWARE.
       lanes.push(Lane(laneBox, 'Lane ' + i));
     }
    
+    if (tf.isStr(parent)) {
+      parent = document.getElementById(parent);
+    }
+    
     if (parent) {
       tf.ap(parent, container);
     }
@@ -530,7 +555,8 @@ SOFTWARE.
       
       isPlaying: function () { return isPlaying;},
       time: function () {return currentTime;},
-      zoomFactor: function () {return zoomFactor;}
+      zoomFactor: function () {return zoomFactor;},
+      selectedBlock: function () {return selectedBlock;}
     }  
   };
 })();

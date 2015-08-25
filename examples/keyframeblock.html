@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>timeflies.js</title>
+
+    <link href='http://fonts.googleapis.com/css?family=Roboto:300,400,700' rel='stylesheet' type='text/css'>
+    <link href='./css/light.css' rel='stylesheet' type='text/css'>
+   
+    <script src="./src/tf.js"></script>
+    <script src="./src/tf.events.js"></script>
+    <script src="./src/tf.resizer.js"></script>
+    <script src="./src/tf.mover.js"></script>
+    <script src="./src/tf.dnd.js"></script>
+    <script src="./src/tf.timeline.js"></script>
+   
+    <style>     
+       html, body {
+        padding:0;
+        margin:0;
+        background:#FFF;  
+        font-family: Roboto;
+      }     
+      
+      .sequencer {
+        width:60%;
+        float: left;
+      }
+      
+      .preview {
+        position:relative;
+        width:40%;
+        height:100%;
+        float:left;
+        background-color:#333;
+      }
+      
+      .thing {
+        position: absolute;
+        left:0px;
+        top:0px;
+        width:40px;
+        height:40px;
+        background:#aa0000;
+        display: none;
+      }
+     </style>
+   
+    </head>
+    <body>
+      <div style="padding:4px;">
+        <!-- Zoom slider (may not render correctly in certain browsers) -->      
+        -<input type="range" max="100" min="1" value="100" onchange="doZoom(this);"/>+   
+        <button onclick="sequencer.play()">PLAY</button>
+        <button onclick="sequencer.pause()">PAUSE</button>
+        <br/>
+        All Keyframe-blocks are connected to the same object.
+        Hold shift to select a keyframe. Move it by dragging.
+        Right-click keyframe to delete it.
+        Move the red rectangle to where you want it on a spesific time, and click "ADD KEYFRAME".
+      </div>
+      
+      <div id="sequencer" class="sequencer tf-box-size"></div>
+      <div id="preview" class="preview tf-box-size">
+        
+        <div id="thing" class="thing"></div>
+        <button onclick="addKey();">ADD KEY FOR CURRENT POS AT CURRENT TIME</button>
+        <button onclick="editKey();">EDIT CURRENT KEY</button>
+      </div>
+    </body>
+    <script>
+      
+      function addKey() {
+        //Need to resolve the block here.
+        if (sequencer.selectedBlock()) {
+          sequencer.selectedBlock().state.addKey();       
+        }
+      }
+      
+      function editKey() {
+        //Need to resolve the block here.
+        if (sequencer.selectedBlock()) {
+          sequencer.selectedBlock().state.editKey();       
+        }
+      }
+      
+      ///////////////////////////////////////////////////////////////////////// 
+      
+      function AnimatableDiv(div) {
+        if (tf.isStr(div)) {
+          div = document.getElementById(div);
+        }
+        
+        var mover = tf.Mover(div, div),
+            pos = {x: 0, y: 0}
+        ;
+        
+        mover.on('Moving', function (x, y) {
+          pos.x = x;
+          pos.y = y;
+        });
+        
+        return {
+          node: div,
+          pos: pos
+        };
+      }
+            
+      /////////////////////////////////////////////////////////////////////////  
+      
+      //We need a separate mover for SVG nodes..
+      function SVGMover(handle, opos) {
+        var events = tf.events(),
+            moving = false,
+            delta = {x: 0, y: 0},
+            pos = {x: 0, y: 0},
+            opos = {x: 0, y: 0}
+        ;
+      
+        if (!handle) {
+          handle = target;
+        }
+      
+        tf.on(handle, 'mousedown', function (e) {
+          var upper, 
+              mover
+          ;
+      
+          if (e.shiftKey) {
+            return;
+          }
+      
+          opos = {
+            x: handle.x.baseVal.value,
+            y: handle.y.baseVal.value 
+          };
+      
+          delta.x = e.clientX;
+          delta.y = e.clientY;
+      
+          moving = true;
+      
+          upper = tf.on(document.body, 'mouseup', function (e) {
+            upper();
+            mover();
+      
+            events.emit('Done', pos.x, pos.y);
+            
+            moving = false;
+            return tf.nodefault(e);
+          });
+      
+          mover = tf.on(document.body, 'mousemove', function (e) {
+            if (moving) {
+              pos.x = opos.x + (e.clientX - delta.x);
+              pos.y = opos.y + (e.clientY - delta.y);
+              if (pos.x < 0) pos.x = 0;
+                   
+              handle.setAttributeNS(null, 'x', pos.x); 
+              //handle.setAttributeNS(null, 'y', pos.y); 
+                                 
+              events.emit('Moving', pos.x, pos.y);
+            }
+            return tf.nodefault(e);
+          });
+      
+          return tf.nodefault(e);
+        });
+      
+        return {
+          on: events.on
+        };
+      };
+          
+      /////////////////////////////////////////////////////////////////////////      
+      
+      tf.RegisterBlockType('Keyframer', {
+        state: {
+          keyframes: [
+            {t: 0, x: 0, y: 0},
+            {t: 0.5, x: 10, y: 10},
+            {t: 1, x: 40, y: 40}
+          ],
+          vx: 0,
+          vy: 0,
+          btime: 0
+        },
+        construct: function (parent, on) {
+          //Attach to the thing - note that the idea is that this string
+          //can be part of the state, and thus supplied on block construction.
+          this.thing = AnimatableDiv('thing');
+          this.thing.node.style.display = 'block';
+          
+          //This is kinda ugly, but it works..
+          this.addKey = (function (self) {
+            return function () {
+              //Add a key on the current local time
+              self.keyframes.push({
+                t: self.btime,
+                x: this.thing.pos.x,
+                y: this.thing.pos.y
+              });
+              sort(self);
+              build(self);
+            }
+          })(this);
+          
+          this.editKey = (function (self) {
+            return function () {
+              if (self.selected) {
+                self.selected.frame.x = self.thing.pos.x;
+                self.selected.frame.y = self.thing.pos.y;
+              }
+            };
+          })(this);
+          
+          //Sort the keyframes
+          function sort(self) {
+            self.keyframes = self.keyframes.sort(function (a, b) {  
+              return a.t > b.t;
+            });
+            
+            if (self.keyframes.length > 0) {
+              self.keyframes[0].t = 0;
+            }
+            
+            if (self.keyframes.length > 1) {
+              self.keyframes[self.keyframes.length - 1].t = 1;
+            }
+          }
+          
+          //Helper function to draw a keyframe
+          function SVGKeyFrame(x, y, h) {
+            var node = document.createElementNS(svgNS, 'rect');
+            node.setAttributeNS(null, 'x', x);
+            node.setAttributeNS(null, 'y', y);
+            node.setAttributeNS(null, 'width', 10);
+            node.setAttributeNS(null, 'height', h);
+            node.setAttributeNS(null, 'fill', '#FFF');
+            tf.ap(svg, node);
+            return node;
+          }
+          
+          //Build the keyframer
+          function build(self) {
+            var width = tf.size(parent).w - 10,
+                height = tf.size(parent).h - 10
+            ;
+          
+            svg.innerHTML = '';
+            
+            self.keyframes.forEach(function (frame) {               
+               var n = SVGKeyFrame(frame.t * width, 0, height),
+                   mover
+               ;
+               
+               tf.on(n, 'contextmenu', function (e) {
+                if (self.keyframes.length === 1) return tf.nodefault(e);
+                
+                self.keyframes = self.keyframes.filter(function (f) {
+                  return frame !== f;                  
+                });
+                sort(self);
+                build(self);
+                return tf.nodefault(e);
+               });
+               
+               tf.on(n, 'mousedown', function (e) {
+                 if (!e.shiftKey) return;
+                 
+                 if (self.selected) {
+                   self.selected.n.setAttributeNS(null, 'fill', '#FFF');
+                 }
+                 
+                 self.selected = {
+                   frame: frame,
+                   n: n
+                 };
+                 n.setAttributeNS(null, 'fill', '#333');
+                 return tf.nodefault(e);
+               });
+               
+               mover = SVGMover(n, frame.t * width, 0);
+               
+               mover.on('Done', function (x) {
+                 frame.t = x / width;
+                 sort(self);
+                 build(self);                 
+               });
+               
+            });
+          }
+          
+          //Create a simple UI
+          var svgNS = 'http://www.w3.org/2000/svg',
+              svg = document.createElementNS(svgNS,'svg'),
+              listeners = []
+          ;
+          
+          //Need to set some properties to the svg node
+          svg.setAttributeNS(null, 'height', '100%');
+          svg.setAttributeNS(null, 'width', '100%');
+          svg.setAttributeNS(null, 'viewbox', '0 0 3 2');
+          
+          on('Resize', build);
+          
+          //Append the UI to the block node
+          tf.ap(parent,
+             svg
+          ); 
+          
+        },
+        process: function (blockTime, changed, setTitle) {
+          //Linear interpolation
+          function lerp(a, b, f) {
+            return (a * (1 - f)) + (b * f);
+          }
+          
+          this.btime = blockTime;
+          
+          //Find the current fromKey/toKey
+          this.fromKey = this.toKey = 0;
+          if (this.keyframes.length <= 1) {
+            value = this.keyframes.length == 1 ? this.keyframes[0].v : 0;
+            return;
+          }
+          
+          for (var i = 0; i < this.keyframes.length; i++) {
+            if (this.keyframes[i].t < blockTime) this.fromKey = i;
+            if (this.keyframes[i].t > blockTime) {
+              this.toKey = i;
+              break;
+            }
+          }
+          
+          this.fromKey = this.keyframes[this.fromKey];
+          this.toKey = this.keyframes[this.toKey];
+          
+          vx = lerp(this.fromKey.x, this.toKey.x, (blockTime - this.fromKey.t) / (this.toKey.t - this.fromKey.t));
+          vy = lerp(this.fromKey.y, this.toKey.y, (blockTime - this.fromKey.t) / (this.toKey.t - this.fromKey.t));
+          
+          setTitle('Keyframer - [' + Math.round(vx) + ',' + Math.round(vy) + ']');
+          
+          //Update the sprite position if the time has changed.         
+          if (changed) {
+            tf.style(this.thing.node, {
+              left: vx + 'px',
+              top: vy + 'px'
+            });            
+          }
+        }
+        
+      });
+      
+      
+      /////////////////////////////////////////////////////////////////////////
+      
+      //Zoom the sequencer
+      function doZoom(sender) {
+        sequencer.zoom(parseFloat(100 - parseInt(sender.value, 10)) / 10);  
+      }
+      
+      //Create a sequencer instance, and add it to document.body
+      var sequencer = tf.Sequencer('sequencer', {
+        initialLanes: 10
+      });
+      
+      //Add a custom block to the block pool
+      tf.RegisterBlockType('My Block Type', {
+        process: function (blockTime) {
+          //This function is called when the block is "active".
+          //blockTime contains the current time from 0..1, where 0 is the start
+          //of the block, and 1 is the end. 
+          //For a list of all possible callbacks in tf.RegisterBlockType,
+          //refer to the README in the root directory.
+        }
+      });
+     
+      //Proces the sequencer every 100ms (NOTE: should use requestAnimationFrame instead, with a fallback to setInterval)
+      setInterval(sequencer.process, 100);
+      
+      //Create a draggable div that creates a My Block Type block on the lane it's dropped on
+      var test = tf.cr('div', '', 'Drag me to a lane!');
+      
+      tf.style(test, {
+        fontFamily: 'Roboto',
+        background:"#333",
+        color: '#FFF',
+        padding:'4px',
+        width: '200px',
+        textAlign: 'center'    
+      });
+      
+      tf.Draggable(test, 'block', {
+        type: 'Keyframer'
+      });
+      
+      tf.ap(document.body, test);
+      
+      //Set the time to 0
+      sequencer.setTime(0);
+      //Resize the sequencer
+      sequencer.resize();
+      
+    </script>
+</html>
