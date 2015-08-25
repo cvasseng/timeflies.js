@@ -90,9 +90,11 @@ SOFTWARE.
       function constructProto() {
         if (proto) {
           if (Object.keys(pinterface.state).length !== Object.keys(proto.state).length) {
-            tf.merge(pinterface.state, proto.state);            
+            var curr = tf.merge({}, pinterface.state);
+            tf.merge(pinterface.state, proto.state); 
+            tf.merge(pinterface.state, curr);           
           }
-          proto.construct.apply(pinterface.state, [body, events.on]);
+          proto.construct.apply(pinterface.state, [body, events.on, pinterface, setTitle]);
         }
       }
       
@@ -102,6 +104,10 @@ SOFTWARE.
           height: tf.size(node).h - 25 + 'px'
         });
         events.emit('Resize', pinterface.state);
+      }
+      
+      function setTitle (txt) {
+        title.innerHTML = pinterface.type + ': ' + txt;
       }
       
       pinterface.resizeBody = resizeBody;
@@ -144,7 +150,7 @@ SOFTWARE.
             //We just stopped processing, so remove the "active" class
             node.className = 'block tl-transition-color';
             if (proto) {
-              proto.startProcess.apply(pinterface.state);
+              proto.stopProcess.apply(pinterface.state, [timeMs - pinterface.start]);
             }
           }
           isProcessing = false;
@@ -155,7 +161,7 @@ SOFTWARE.
           //We just started processing, so add the "active" class
           node.className = 'block tl-transition-color block-active';
           if (proto) {
-            proto.stopProcess.apply(pinterface.state);
+            proto.startProcess.apply(pinterface.state, [timeMs - pinterface.start]);
           }
         }
         
@@ -166,9 +172,7 @@ SOFTWARE.
         //Calculate block time in [0..1] range
         bTime = (timeMs - pinterface.start) / pinterface.length;
         
-        proto.process.apply(pinterface.state, [bTime, bTime !== bTimeLast, function (txt) {
-          title.innerHTML = pinterface.type + ': ' + txt;
-        }]);
+        proto.process.apply(pinterface.state, [bTime, bTime !== bTimeLast, setTitle, timeMs - pinterface.start]);
         
         bTimeLast = bTime;
       };
@@ -415,7 +419,7 @@ SOFTWARE.
       buildTimeIndicators(); 
     }        
     
-    function setTime(t) {
+    function setTime(t, callout) {
       //Need to scroll + set marker position
       currentTime = t;
       setMarker(t);
@@ -423,6 +427,8 @@ SOFTWARE.
       if (isPlaying) { //Adjust the play offset
          playingOffset = (new Date()).getTime() - currentTime;
       }
+      
+      events.emit('SetTime', currentTime);
     }
     
     function setMarker(time) {
