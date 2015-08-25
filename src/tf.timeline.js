@@ -93,11 +93,11 @@ SOFTWARE.
       function constructProto() {
         body.innerHTML = '';
         if (proto) {
-          if (Object.keys(pinterface.state).length !== Object.keys(proto.state).length) {
+          //if (Object.keys(pinterface.state).length !== Object.keys(proto.state).length) {
             var curr = tf.merge({}, pinterface.state);
             tf.merge(pinterface.state, proto.state); 
             tf.merge(pinterface.state, curr);           
-          }
+          //}
           proto.construct.apply(pinterface.state, [body, events.on, pinterface, setTitle]);
         }
       }
@@ -130,7 +130,7 @@ SOFTWARE.
       }      
       
       pinterface.resizeBody = resizeBody;
-      pinterface.reinit = constructProto();
+      pinterface.reinit = constructProto;
           
       //Serialize block to JSON
       pinterface.toJSON = function () {
@@ -299,6 +299,8 @@ SOFTWARE.
         if (!bottomBlock) {
           bottomBlock = b;
         }
+        
+        calcStartEnd();
         
         return b;
       }
