@@ -53,6 +53,9 @@ SOFTWARE.
         bcount = 0,
         currentTime = 0,
         zoomFactor = 1,
+        isPlaying = false,
+        playingOffset = 0,
+        playHandle = 0,
         properties = tf.merge({
           initialLanes: 10
         }, attrs)
@@ -84,7 +87,9 @@ SOFTWARE.
       
       function constructProto() {
         if (proto) {
-          tf.merge(pinterface.state, proto.state);
+          if (Object.keys(pinterface.state).length !== Object.keys(proto.state).length) {
+            tf.merge(pinterface.state, proto.state);            
+          }
           proto.construct.apply(pinterface.state, [body, events.on]);
         }
       }
@@ -372,7 +377,13 @@ SOFTWARE.
     }
     
     //1 pixels = factor milliseconds
+    //Also - the factor HAS to be even.
+    //So if it's even, it will snap to factor + 1 
     function zoom(factor) {
+      if ((Math.abs(factor) % 2 == 1)) {
+        factor++;
+      }
+      
       if (factor < 1) factor = 1;
       
       //Need to update all the blocks..
@@ -381,16 +392,23 @@ SOFTWARE.
       
       lanes.forEach(function (lane) {
         lane.zoomUpdated();
-      });
-      
-    }
+      });          
+    }        
     
     function setTime(t) {
       //Need to scroll + set marker position
-      tf.style(timeMarker, {
-        left: (t / zoomFactor) + 'px'
-      });
       currentTime = t;
+      setMarker(t);
+      
+      if (isPlaying) { //Adjust the play offset
+         playingOffset = (new Date()).getTime() - currentTime;
+      }
+    }
+    
+    function setMarker(time) {
+      tf.style(timeMarker, {
+        left: (time / zoomFactor) - scrollBar.scrollLeft + 'px'
+      });
     }
     
     function process() {
@@ -419,6 +437,34 @@ SOFTWARE.
       obj.forEach(function (l) {
         addLane().fromJSON(l);
       });
+    }
+    
+    function play() {
+      function frame() {
+        currentTime = (new Date()).getTime() - playingOffset;
+        setMarker(currentTime);        
+        process();
+        
+        if (isPlaying && tf.isFn(requestAnimationFrame)) {
+          requestAnimationFrame(frame);
+        }
+      }
+      
+      pause(); //Just to clear intervals
+      playingOffset = (new Date()).getTime() - currentTime;
+      isPlaying = true;
+      if (tf.isFn(requestAnimationFrame)) {
+        playHandle = requestAnimationFrame(frame);
+      } else {
+        playHandle = setInterval(frame, 50);
+      }
+    }
+    
+    function pause() {
+      isPlaying = false;
+      if (!tf.isFn(requestAnimationFrame)) {
+        clearInterval(playHandle);
+      }
     }
     
     /////////////////////////////////////////////////////////////////////////////
@@ -450,19 +496,14 @@ SOFTWARE.
       tf.ap(parent, container);
     }
     
-    tf.on(timeContainer, 'click', function (e) {
-       tf.style([timeMarker], {
-         left: e.clientX + 'px'
-       });
-       currentTime = (e.clientX + scrollBar.scrollLeft) * zoomFactor;
+    tf.on(timeContainer, 'click', function (e) {      
+      setTime((e.clientX + scrollBar.scrollLeft) * zoomFactor);
     });
     
     tf.on(scrollBar, 'scroll', function (e) {
       laneBox.scrollLeft = scrollBar.scrollLeft;
       timeContainer.scrollLeft = scrollBar.scrollLeft;
-      tf.style(timeMarker, {
-        left: (currentTime / zoomFactor) - scrollBar.scrollLeft + 'px'    
-      });
+      setMarker(currentTime);
     });
     
     resize(); 
@@ -478,7 +519,13 @@ SOFTWARE.
       process: process,
       zoom: zoom,
       toJSON: toJSON,
-      fromJSON: fromJSON
+      fromJSON: fromJSON,
+      play: play,
+      pause: pause,
+      
+      isPlaying: function () { return isPlaying;},
+      time: function () {return currentTime;},
+      zoomFactor: function () {return zoomFactor;}
     }  
   };
 })();

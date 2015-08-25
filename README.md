@@ -13,7 +13,7 @@ Suggested use cases include:
   * Lightweight: weighs in at less than 10kb minified
   * No dependencies. Just drop it into your project, and you're good to go
   * Easy to skin (look at `./less/light.less` to see how)
-  * Supports composite blocks, meaning you can add your own block types easily (e.g. a spline editor block)    
+  * Supports composite blocks, meaning you can add your own block types easily, with (optionally) their own UI inside the block (e.g. a spline editor block)    
   * Supports drag 'n dropping blocks onto lanes
   * Zooming
   * Blocks are freeform, and can be moved across lanes (by holding shift and dragging), moved (by dragging), and resized (by grabbing the resize handle on the far-right)  
@@ -89,6 +89,11 @@ Details on which events are available can be found below.
   * `zoom(factor)`: set zoom factor. Factor is number of milliseconds per. pixel
   * `toJSON()`: serialize the timeline to a JSON object
   * `fromJSON(obj)`: unserialize the timeline from a JSON object
+  * `play()`: start playing back the sequence from current time
+  * `pause()`: pause playback
+  * `isPlaying()`: returns the current playback state
+  * `time()`: returns the current time in milliseconds
+  * `zoomFactor()`: returns the current zoom factor
     
  *Events*
   * `Addlane : lane`: emitted when a lane is added    
