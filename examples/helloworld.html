@@ -17,20 +17,35 @@
        html, body {
         padding:0;
         margin:0;
-        background:#FFF;  
-      }     
+        background:#FFF; 
+        font-family: 'Roboto';
+        font-size:100%; 
+      }   
+      
+      .draggable {
+        background:#333;
+        color: #FFF;
+        padding:4px;
+        width: 200px;
+        text-align: center; 
+        margin:2px; 
+      }
+    
      </style>
    
     </head>
     <body>
-      <!-- Zoom slider (may not render correctly in certain browsers) -->
-      -<input type="range" max="100" min="1" value="100" onchange="doZoom(this);"/>+   
-    </body>
+      <div style="padding:4px;">
+        <!-- Zoom slider (may not render correctly in certain browsers) -->      
+        -<input type="range" max="400" min="1" value="400" onchange="doZoom(this);"/>+   
+        <button onclick="sequencer.play()">PLAY</button>
+        <button onclick="sequencer.pause()">PAUSE</button>
+      </div>
     <script>
       
       //Zoom the sequencer
       function doZoom(sender) {
-        sequencer.zoom(parseFloat(100 - parseInt(sender.value, 10)) / 10);  
+        sequencer.zoom(parseFloat(400 - parseInt(sender.value, 10)) / 10);  
       }
       
       //Create a sequencer instance, and add it to document.body
@@ -53,23 +68,12 @@
       setInterval(sequencer.process, 100);
       
       //Create a draggable div that creates a My Block Type block on the lane it's dropped on
-      var test = tf.cr('div', '', 'Drag me to a lane!');
-      
-      tf.style(test, {
-        fontFamily: 'Roboto',
-        background:"#333",
-        color: '#FFF',
-        padding:'4px',
-        width: '200px',
-        textAlign: 'center'    
-      });
-      
-      tf.Draggable(test, 'block', {
-        type: 'My Block Type'
-      });
-      
-      tf.ap(document.body, test);
-      
+      tf.ap(document.body, 
+        tf.Draggable(tf.cr('div', 'draggable', 'Drag me on to a lane!'), 'block', {          
+         type: 'My Block Type'
+        }).target        
+      );
+            
       //Set the time to 0
       sequencer.setTime(0);
       //Resize the sequencer

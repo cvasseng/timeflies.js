@@ -42,6 +42,16 @@
         height:40px;
         background:#aa0000;
         display: none;
+        margin:2px;
+      }
+      
+      .draggable {
+        background:#333;
+        color: #FFF;
+        padding:4px;
+        width: 200px;
+        text-align: center;  
+        margin:2px;
       }
      </style>
    
@@ -364,37 +374,15 @@
         initialLanes: 10
       });
       
-      //Add a custom block to the block pool
-      tf.RegisterBlockType('My Block Type', {
-        process: function (blockTime) {
-          //This function is called when the block is "active".
-          //blockTime contains the current time from 0..1, where 0 is the start
-          //of the block, and 1 is the end. 
-          //For a list of all possible callbacks in tf.RegisterBlockType,
-          //refer to the README in the root directory.
-        }
-      });
-     
       //Proces the sequencer every 100ms (NOTE: should use requestAnimationFrame instead, with a fallback to setInterval)
       setInterval(sequencer.process, 100);
       
       //Create a draggable div that creates a My Block Type block on the lane it's dropped on
-      var test = tf.cr('div', '', 'Drag me to a lane!');
-      
-      tf.style(test, {
-        fontFamily: 'Roboto',
-        background:"#333",
-        color: '#FFF',
-        padding:'4px',
-        width: '200px',
-        textAlign: 'center'    
-      });
-      
-      tf.Draggable(test, 'block', {
-        type: 'Keyframer'
-      });
-      
-      tf.ap(document.body, test);
+      tf.ap(document.body, 
+        tf.Draggable(tf.cr('div', 'draggable', 'Keyframe Block'), 'block', {          
+         type: 'Keyframer'
+        }).target        
+      );
       
       //Set the time to 0
       sequencer.setTime(0);
