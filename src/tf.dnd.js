@@ -39,7 +39,8 @@ SOFTWARE.
 
     callbacks.push(tf.on(target, 'dragstart', function (e) {
       e.dataTransfer.effectAllowed = 'copy';
-
+      e.dataTransfer.setData('text/plain', '-');
+      
       activePayload = {
         type: type,
         payload: payload,
