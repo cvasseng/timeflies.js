@@ -126,17 +126,7 @@ SOFTWARE.
         };
         
         events.emit('Focus');
-      }
-      
-      function checkIfNewStop() {
-        if (pinterface.start + pinterface.length > stopTime) {
-          stopTime = pinterface.start + pinterface.length;
-        }
-        
-        if (pinterface.start < startTime) {
-          startTime = pinterface.start;
-        }
-      }
+      }      
       
       pinterface.resizeBody = resizeBody;
       pinterface.reinit = constructProto();
@@ -240,7 +230,6 @@ SOFTWARE.
       
       resizer.on('Done', function () {
         focus();
-        checkIfNewStop();
         events.emit('Resized');
       });
       
@@ -252,7 +241,6 @@ SOFTWARE.
       
       mover.on('Done', function () {
         focus();
-        checkIfNewStop();
         events.emit('Moved');
       });
       
@@ -261,7 +249,6 @@ SOFTWARE.
       }
       
       constructProto();
-      checkIfNewStop();
       
       return pinterface;
     }
@@ -275,7 +262,8 @@ SOFTWARE.
           body = tf.cr('div', 'lane-body tl-box-size'),
           resizer = tf.Resizer(body, container, 'Y'),
           dropTarget = tf.DropTarget(body, 'block block-move'),
-          blocks = []        
+          blocks = [],
+          bottomBlock = false        
       ;           
             
       //Sort blocks
@@ -283,6 +271,7 @@ SOFTWARE.
         blocks = blocks.sort(function (a, b) {
           return a.start > b.start;
         });
+        recalcBottomBlock();
       }
       
       //Add a block
@@ -301,6 +290,14 @@ SOFTWARE.
         b.on('Moved', sort);
         b.on('Resized', sort);        
         sort();
+        
+        events.emit('AddBlock', b);
+        
+        if (!bottomBlock) {
+          bottomBlock = b;
+        }
+        
+        return b;
       }
       
       //Add a block on a given time
@@ -316,8 +313,7 @@ SOFTWARE.
       function addBlockAtPixel(x, attrs) {
         var b = Block(body, tf.merge(attrs || {}, {
           start: x * zoomFactor
-        }));
-        events.emit('AddBlock', b);
+        }));        
         return addBlock(b);
       }
       
@@ -344,7 +340,27 @@ SOFTWARE.
         events.emit('Destroy');
       }
       
+      //Recalc the bottom block based on the current time
+      function recalcBottomBlock() {
+        blocks.some(function (b) {
+          if (b.start - 10 > currentTime) {
+            return false;
+          }
+          bottomBlock = b;
+        });
+      }
+      
       //Process lane - naive implementation. TODO: sorting, culling, etc.
+      /*
+        Blocks are always sorted.
+        So we can keep track of the current block, and iterate from there,
+        until we hit a block that that starts - 10 ms from timeMs.
+        When scrubbing, we need to recalc the from block.
+        
+        The problem is that if a block is active, and we're scrubbing
+        backwards, it never gets told that it's no longer active.
+        So while it won't process anymore, it will be marked as active..
+      */
       function process(timeMs) {
         blocks.forEach(function (b) {
           // if (b.start - 10 > timeMs) {
@@ -380,6 +396,19 @@ SOFTWARE.
         });
       }
       
+      function count() {
+        return blocks.length;
+      }
+      
+      function getBlock(b) {
+        if (tf.isNum(b)) {
+          if (b < 0 || b >= blocks.length) {
+            return false;
+          }
+          return blocks[b];
+        }
+      }
+      
       /////////////////////////////////////////////////////////////////////////////         
           
       resizer.on('Done', function () {
@@ -406,6 +435,7 @@ SOFTWARE.
       }
       
       return {
+        recalcBottomBlock: recalcBottomBlock,
         removeBlock: removeBlock,
         destroy: destroy,
         addBlockAtPixel: addBlockAtPixel,
@@ -416,7 +446,9 @@ SOFTWARE.
         process: process,
         zoomUpdated: zoomUpdated,
         toJSON: toJSON,
-        fromJSON: fromJSON
+        fromJSON: fromJSON,
+        count: count,
+        getBlock: getBlock
       }
     } 
   
@@ -486,6 +518,10 @@ SOFTWARE.
       setMarker(t);
       
       updatePlayOffset();
+      
+      lanes.forEach(function (lane) {
+        lane.recalcBottomBlock();
+      });
       
       events.emit('SetTime', currentTime);
     }
@@ -573,12 +609,31 @@ SOFTWARE.
     }
     
     function gotoStart() {
+      startTime = 500000;
+      lanes.forEach(function (lane) {
+        if (lane.count() > 0) {
+          if (lane.getBlock(0).start < startTime) {
+            startTime = lane.getBlock(0).start;
+          }
+        }        
+      });
+      
       currentTime = startTime;
       setMarker(currentTime);
       updatePlayOffset();
     }
     
     function gotoEnd() {
+      stopTime = 0;
+      lanes.forEach(function (lane) {
+        if (lane.count() > 0) {
+          var i = lane.count() - 1;
+          if (lane.getBlock(i).start + lane.getBlock(i).length > stopTime) {
+            stopTime = lane.getBlock(i).start + lane.getBlock(i).length;
+          }
+        }         
+      });
+      
       currentTime = stopTime;
       setMarker(currentTime);
       updatePlayOffset();
