@@ -108,6 +108,28 @@ Example:
       }
     });
     
+**Adding Blocks to a Lane**
+
+Blocks can be added either by dragging them onto a lane, or by programatically calling `addBlockAtPixel` or `addBlockAtTime` on a lane.
+To make a draggable `div` that creates a block on a lane when dropped, use `tf.Draggable`:
+  
+    tf.Draggable(MyDiv, 'block', {
+      //Initialization arguments
+    });
+  
+The initialization object is the same as that which can be supplied to the `addBlockAt` functions.
+It can have the following options (all are optional, though type should normally be supplied):
+
+    {
+      id: <id of block, defaults to either a uuid (if uuid.js is included) or a unique number>,
+      type: <type of block, corresponds with the first argument for tf.RegisterBlockType calls>,
+      start: <start time in milliseconds>,
+      length: <length of block in milliseconds>,
+      state: <the local state, this is accessed using this in the functions supplied to tf.RegisterBlockType>
+    }        
+    
+##API Reference
+    
 **tf.Sequencer Interface**
   * `lane(number)`: returns a lane based on index, or false if out of bounds.   
   * `on(event, callback, [context])`: attach an event listener to the timeline.
@@ -265,27 +287,6 @@ Example: create a resizable DIV:
     tf.Resizer(node, node);
     tf.ap(document.body, node);
 
-    
-**Adding Blocks to a Lane**
-
-Blocks can be added either by dragging them onto a lane, or by programatically calling `addBlockAtPixel` or `addBlockAtTime` on a lane.
-To make a draggable `div` that creates a block on a lane when dropped, use `tf.Draggable`:
-  
-    tf.Draggable(MyDiv, 'block', {
-      //Initialization arguments
-    });
-  
-The initialization object is the same as that which can be supplied to the `addBlockAt` functions.
-It can have the following options (all are optional, though type should normally be supplied):
-
-    {
-      id: <id of block, defaults to either a uuid (if uuid.js is included) or a unique number>,
-      type: <type of block, corresponds with the first argument for tf.RegisterBlockType calls>,
-      start: <start time in milliseconds>,
-      length: <length of block in milliseconds>,
-      state: <the local state, this is accessed using this in the functions supplied to tf.RegisterBlockType>
-    }        
-    
 # License
 
 MIT. See LICENSE.md for details.
