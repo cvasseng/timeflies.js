@@ -51,29 +51,29 @@ SOFTWARE.
         lanes = [],
         bcount = 0,
         currentTime = 0,
-        zoomFactor = 1,
         isPlaying = false,
         playingOffset = 0,
         playHandle = 0,
         properties = tf.merge({
-          initialLanes: 10
+          initialLanes: 10,
+          initialZoom: 1,
+          looping: false
         }, attrs),
+        zoomFactor = properties.initialZoom,
         selectedBlock = false,
         stopTime = 0,
         startTime = 50000,
-        looping = false
+        looping = properties.looping
     ;
   
     //Create a block
-    function Block(parent, attrs, data) {
+    function Block(parent, attrs) {
       var events = tf.events(),          
-          blockTime = 0,
           isProcessing = false,
           pinterface = tf.merge({
             state: {},
             type: 'Unkown Type',
             on: events.on,
-            data: data,
             id: (typeof uuid !== 'undefined') ? uuid.v4() : (++bcount),
             start: 0,
             length: 100
@@ -131,6 +131,7 @@ SOFTWARE.
       
       pinterface.resizeBody = resizeBody;
       pinterface.reinit = constructProto;
+      pinterface.setTitle = setTitle;
           
       //Serialize block to JSON
       pinterface.toJSON = function () {

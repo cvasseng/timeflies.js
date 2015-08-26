@@ -37,13 +37,22 @@ properly, as they use the "unbuilt" sources - both for the JavaSript, and for th
  
 After starting the server as descripted above, go to [http://127.0.0.1:3050/helloworld.html](http://127.0.0.1:3050/helloworld.html) in your browser for a full listing of examples.
  
-#Usage
+#Usage and API Reference
 
 **Creating a timeline control**
     
-    var timeline = tf.Sequencer(document.body);
+    var timeline = tf.Sequencer(document.body, options);
 
-The first argument is the DOM node to attach to.
+The first argument is the DOM node to attach to. Notice the lack of `new` - this is not a typo.
+timeline.js is implemented in a functional-style, without prototype-based inheritance or classic OOP emulation patterns.
+
+The second argument is an object containing the timeline options. It's an optional argument, and can contain any and all of the following:
+    
+    {
+      initialLanes: <number of lanes to initially create (default is 10)>,
+      initialZoom: <initial zoom factor (default is 1)>,
+      looping: <initial loop state (default is false)>
+    }
     
 **A note on events**
 
@@ -119,13 +128,38 @@ Details on which events are available can be found below.
   * `zoomUpdate`: updates the positions of all the child blocks to fit the current zoom factor
   * `toJSON()`: serializes the lane to a JSON object
   * `fromJSON(obj)`: unpack the lane from an object
+  * `count()`: returns the number of blocks in the lane
+  * `getBlock(index)`: returns the block at the given index
 
 *Events*
   * `AddBlock : <block instance>`: emitted when a new block is added to the lane
   * `RemoveBlock : <block>`: emitted when a block is removed from the lane
   * `Destroy`: emitted when the lane is destroyed
 
-**Adding Blocks**
+**Block Interface**
+  * `state`: an object containing the block's custom state
+  * `type`: a string defining the block type
+  * `id`: the id of the block
+  * `start`: start of the block in milliseconds (call `recalc()` afterwards if modifying directly)
+  * `length`: length of the block in milliseconds (call `recalc()` afterwards if modifying directly)
+  * `on(event, callback)`: attach an event listener to a block
+  * `resizeBody()`: resizes the body of the node, which custom UI is attached to, to fit the block
+  * `reinit()`: re-executes the blocks `construct` function
+  * `setTitle(title)`: set the title of the block
+  * `toJSON()`: serialize the block to a JSON object
+  * `fromJSON(obj)`: init the block from a JSON object
+  * `destroy()`: destroys the block - this removes it from the sequence
+  * `process(timeMS)`: process the block
+  * `recalc()`: recalculates the position and width of the block from the start/length
+  
+*Events*
+  * `Resize`: emitted when `resizeBody` is called, e.g. when vertically sizing lanes
+  * `Focus`: emitted when the block is selected
+  * `Destroy`: emitted when the block is destroyed
+  * `Resized`: emitted when the block has been resized
+  * `Moved`: emitted when the block has been moved  
+
+**Adding Blocks to a Lane**
 
 Blocks can be added either by dragging them onto a lane, or by programatically calling `addBlockAtPixel` or `addBlockAtTime` on a lane.
 To make a draggable `div` that creates a block on a lane when dropped, use `tf.Draggable`:
