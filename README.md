@@ -56,9 +56,28 @@ The second argument is an object containing the timeline options. It's an option
     
 **A note on events**
 
-Most things emit events which can be listened to using the `on(event, callback)` function.
+Most things emit events which can be listened to using the `on(event, callback, [context])` function.
 This function returns a function that can be called to unsubscribe from the event.
-Details on which events are available can be found below.
+Details on which events are available can be found below. 
+The context specifies what should be set as the `this` reference inside the callback. 
+This argument is optional.
+
+Example:
+    
+    timeline.on('AddLane', function (lane) {
+      console.log('Added a lane!');
+      
+      lane.on('AddBlock', function (block) {
+        console.log('Added a block to a lane!');
+      });      
+    });    
+    
+ With context set:
+    
+    timeline.on('AddLane', function (lane) {
+      //this keyword now references timeline.
+    }, timeline);
+    
     
 
 **Adding custom blocks**
@@ -91,7 +110,7 @@ Details on which events are available can be found below.
     
 **tf.Sequencer Interface**
   * `lane(number)`: returns a lane based on index, or false if out of bounds.   
-  * `on(event, callback)`: attach an event listener to the timeline.
+  * `on(event, callback, [context])`: attach an event listener to the timeline.
   * `forEachLane(callback)`: iterate through lanes 
   * `resize()`: resizes the timeline control to fit its parent
   * `setTime(timeMS)`: set the current time in milliseconds
@@ -122,7 +141,7 @@ Details on which events are available can be found below.
   * `addBlockAtPixel(pixel, attributes)`: add a block on a given pixel (x-coordinate). Attributes is an object containing the block initializer (see below).
   * `addBlockAtTime(timems, attributes`: add a block on a given time
   * `body`: the body DOM node for the lane
-  * `on(event, callback)`: attach an event listener to the lane
+  * `on(event, callback, [context])`: attach an event listener to the lane
   * `scrollTo(pos)`: scroll to a given pixel 
   * `process(timeMs)`: process the lane with the time supplied
   * `zoomUpdate`: updates the positions of all the child blocks to fit the current zoom factor
@@ -142,7 +161,7 @@ Details on which events are available can be found below.
   * `id`: the id of the block
   * `start`: start of the block in milliseconds (call `recalc()` afterwards if modifying directly)
   * `length`: length of the block in milliseconds (call `recalc()` afterwards if modifying directly)
-  * `on(event, callback)`: attach an event listener to a block
+  * `on(event, callback, [context])`: attach an event listener to a block
   * `resizeBody()`: resizes the body of the node, which custom UI is attached to, to fit the block
   * `reinit()`: re-executes the blocks `construct` function
   * `setTitle(title)`: set the title of the block
@@ -159,6 +178,73 @@ Details on which events are available can be found below.
   * `Resized`: emitted when the block has been resized
   * `Moved`: emitted when the block has been moved  
 
+**The tf.* interface**
+
+The tf namespace contains a few utility functions to perform typechecks, deal with the DOM, and handling events.
+
+  * `tf.ap(target, ...)`: append one or more DOM nodes to the DOM node `target`
+  * `tf.cr(type, cssClass, [value], [id])`: create and return a new DOM node
+  * `tf.style(node, styleObject)`: style a node. Node can be an array, in which case all nodes will be styled at once
+  * `tf.on(target, event, callback, [context]`: attach an event listener to a DOM node
+  * `tf.nodefault(event)`: use to cancel event propogation on the supplied DOM event handle
+  * `tf.merge(a, b)`: merge object `b` into object `a`. This is essentially a deep copy.
+  * `tf.size(node)`: returns an object - `{w, h}` - containing the size of the supplied DOM node
+  * `tf.pos(node)`: returns an object -`{x, y}` - containing the position of the supplied DOM node
+  * `tf.isNull(what)`: returns true if `what` is null or undefined
+  * `tf.isStr(what)`: returns true if `what` is a string
+  * `tf.isNum(what)`: returns true if `what` is a number
+  * `tf.isFn(what)`: returns true if `what` is a function
+  * `tf.isArr(what)`: returns true if `what` is an array
+  * `tf.isBool(what)`: returns true if `what` is a boolean
+  * `tf.isBasic(what)`: returns true if `what` is a basic type (number, string, function) 
+  * `tf.events()`: returns an event dispatcther object
+  
+Example: creating a DIV and appending it to `document.body`:
+    
+    tf.ap(document.body, tf.cr('div', 'myclass', 'Hello world!'));    
+
+Example: styling a DOM node:
+    
+    tf.style(myDOMNode, {
+      color: '#FFF',
+      fontSize: '10px'
+    });
+    
+Example: attaching an event listener to `document.body`:
+    
+    var cancelEvent = tf.on(document.body, 'click', function (e) {
+      ...
+    });
+    
+    //cancelEvent is now a function that can be called to detach the listener
+    
+Example: creating an event listener:
+    
+    //Create an object with an event listener in it
+    function MyObject() {
+      var events = tf.events();
+    
+      function sayHello() {
+        events.emit('Hello');
+      }
+    
+      return {
+        sayHello: sayHello,
+        on: events.on
+      }
+    }
+    
+    //Instance the object
+    var foobar = MyObject();
+    
+    //Attach an event listener
+    foobar.on('Hello', function () {
+      console.log('foobar emitted Hello!');
+    });
+    
+    //Call the hello function, which will emit the event and trigger the above handler
+    foobar.sayHello();
+    
 **Adding Blocks to a Lane**
 
 Blocks can be added either by dragging them onto a lane, or by programatically calling `addBlockAtPixel` or `addBlockAtTime` on a lane.
@@ -172,7 +258,8 @@ The initialization object is the same as that which can be supplied to the `addB
 It can have the following options (all are optional, though type should normally be supplied):
 
     {
-      type: <type of node, corresponds with the first argument for tf.RegisterBlockType calls>,
+      id: <id of block, defaults to either a uuid (if uuid.js is included) or a unique number>,
+      type: <type of block, corresponds with the first argument for tf.RegisterBlockType calls>,
       start: <start time in milliseconds>,
       length: <length of block in milliseconds>,
       state: <the local state, this is accessed using this in the functions supplied to tf.RegisterBlockType>
