@@ -181,6 +181,8 @@ Example:
 **The tf.* interface**
 
 The tf namespace contains a few utility functions to perform typechecks, deal with the DOM, and handling events.
+While they are primarly there to make the rest of the code easier to read, write, and maintain, they can also
+be used outside the library itself.
 
   * `tf.ap(target, ...)`: append one or more DOM nodes to the DOM node `target`
   * `tf.cr(type, cssClass, [value], [id])`: create and return a new DOM node
