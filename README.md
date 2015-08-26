@@ -200,6 +200,8 @@ be used outside the library itself.
   * `tf.isBool(what)`: returns true if `what` is a boolean
   * `tf.isBasic(what)`: returns true if `what` is a basic type (number, string, function) 
   * `tf.events()`: returns an event dispatcther object
+  * `tf.Mover(handle, target, axis)`: make a DOM node movable. Handle is the move handle, target is the node to move, and axis is the axis for which moving is allowed ('X', 'Y', or 'XY'). The returned object has an event emitter (`on(...)`) which can be used to listen to `Done`, `Moving`, and `Start` events.
+  * `tf.Resizer(handle, target, axis)`: make a DOM node resizable. Handle is the resize handle, target is the node to resize, and axis is the axis for which resizing is allowed ('X', 'Y', or 'XY'). The returned object has an event emitter (`on(...)`) which can be used to listen to `Done`, `Resizing`, and `Start` events.
   
 Example: creating a DIV and appending it to `document.body`:
     
@@ -246,6 +248,23 @@ Example: creating an event listener:
     
     //Call the hello function, which will emit the event and trigger the above handler
     foobar.sayHello();
+    
+Example: create a Movable DIV:
+    
+    .movable {
+      position: absoulte;
+    }
+    
+    var node = tf.cr('div', 'movable', 'Move me!');   
+    tf.Mover(node, node);
+    tf.ap(document.body, node);
+    
+Example: create a resizable DIV:
+    
+    var node = tf.cr('div', '', 'Resize me!'); 
+    tf.Resizer(node, node);
+    tf.ap(document.body, node);
+
     
 **Adding Blocks to a Lane**
 
