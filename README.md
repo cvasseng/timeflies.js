@@ -118,7 +118,8 @@ To make a draggable `div` that creates a block on a lane when dropped, use `tf.D
     });
   
 The initialization object is the same as that which can be supplied to the `addBlockAt` functions.
-It can have the following options (all are optional, though type should normally be supplied):
+It can have the following options (all are optional, though type should normally be supplied).
+Note that if the block is dropped, start is automatically set to the time at the drop position in the sequence.
 
     {
       id: <id of block, defaults to either a uuid (if uuid.js is included) or a unique number>,

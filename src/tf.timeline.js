@@ -248,6 +248,12 @@ SOFTWARE.
         calcStartEnd();
       });
       
+      tf.on(node, 'contextmenu', function (e) {
+        //Delete the block..
+        pinterface.destroy();        
+        return tf.nodefault(e);
+      });
+      
       if (parent) {
         tf.ap(parent, node);
       }
@@ -286,7 +292,7 @@ SOFTWARE.
         b.on('Destroy', function () {
           events.emit('RemoveBlock', b); 
           blocks = blocks.filter(function (block) {
-            return b.id === block.id;
+            return b.id !== block.id;
           });  
         });
         
