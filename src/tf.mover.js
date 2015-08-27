@@ -25,13 +25,14 @@ SOFTWARE.
 
 ******************************************************************************/
  
- tf.Mover = function (handle, target, axis) {
+ tf.Mover = function (handle, target, axis, isSVG) {
   var events = tf.events(),
       moving = false,
       delta = {x: 0, y: 0},
       pos = {x: 0, y: 0},
       opos = {x: 0, y: 0},
-      enabled = true
+      enabled = true,
+      snap = 1
   ;
 
   if (!handle) {
@@ -55,7 +56,14 @@ SOFTWARE.
       return;
     }
 
-    opos = tf.pos(target);
+    if (isSVG) {
+      opos = {
+        x: target.x.baseVal.value,
+        y: target.y.baseVal.value
+      };
+    } else {
+      opos = tf.pos(target);      
+    }
 
     delta.x = e.clientX;
     delta.y = e.clientY;
@@ -75,26 +83,36 @@ SOFTWARE.
     mover = tf.on(document.body, 'mousemove', function (e) {
       if (moving) {
 
-        if (!axis || axis === 'X') {
-         pos.x = opos.x + (e.clientX - delta.x);
-         if (pos.x < 0) pos.x = 0;
-         tf.style(target, {
-            left: pos.x + 'px'            
-          });  
+        if (!axis || axis === 'X' || axis === 'XY') {
+          pos.x = snap * Math.floor( (opos.x + (e.clientX - delta.x)) / snap);
+          if (pos.x < 0) pos.x = 0;
+          if (isSVG) {
+            target.setAttributeNS(null, 'x', pos.x); 
+          } else {           
+            tf.style(target, {
+              left: pos.x + 'px'            
+            });  
+          }
         }
         
-        if (!axis || axis === 'Y') {
+        if (!axis || axis === 'Y' || axis === 'XY') {
           pos.y = opos.y + (e.clientY - delta.y);
-          tf.style(target, {         
-            top: pos.y + 'px'
-          });          
+          if (isSVG) {
+            target.setAttributeNS(null, 'y', pos.y);
+          } else {            
+            tf.style(target, {         
+              top: pos.y + 'px'
+            });          
+          }
         }
 
         events.emit('Moving', pos.x, pos.y);
       }
       return tf.nodefault(e);
     });
-
+    
+    events.emit('Start', opos.x, opos.y);
+    
     return tf.nodefault(e);
   });
 
