@@ -50,6 +50,7 @@ SOFTWARE.
         laneBox = tf.cr('div', 'tl-lane-container'),
         lanes = [],
         bcount = 0,
+        lcount = 0,
         currentTime = 0,
         isPlaying = false,
         playingOffset = 0,
@@ -63,11 +64,12 @@ SOFTWARE.
         selectedBlock = false,
         stopTime = 0,
         startTime = 50000,
-        looping = properties.looping
+        looping = properties.looping,
+        undoStack = []
     ;
   
     //Create a block
-    function Block(parent, attrs) {
+    function Block(parent, attrs, plane) {
       var events = tf.events(),          
           isProcessing = false,
           pinterface = tf.merge({
@@ -87,7 +89,9 @@ SOFTWARE.
           mover = tf.Mover(node, node, 'X'),
           size = {w: 0, h: 0},
           bTime = 0,
-          bTimeLast = 0
+          bTimeLast = 0,
+          opos = {x: 0, y: 0},
+          osize = {w: 0, h:0}
       ;
       
       function constructProto() {
@@ -98,7 +102,7 @@ SOFTWARE.
             tf.merge(pinterface.state, proto.state); 
             tf.merge(pinterface.state, curr);           
           //}
-          proto.construct.apply(pinterface.state, [body, events.on, pinterface, setTitle]);
+          proto.construct.apply(pinterface.state, [pinterface, body]);
         }
       }
       
@@ -222,6 +226,20 @@ SOFTWARE.
         body
       );
       
+      resizer.on('Start', function (w, h) {
+        undoStack.push(function () {
+          size.w = w;
+          size.h = h;
+          pinterface.length = w * zoomFactor;
+          tf.style(node, {
+            width: size.w + 'px'
+          });
+          resizeBody();
+          calcStartEnd();   
+          events.emit('Resized'); 
+        });
+      });
+      
       resizer.on('Resizing', function (w, h) {
         //Recalc length  
         size.w = w;
@@ -236,10 +254,21 @@ SOFTWARE.
         calcStartEnd();
       });
       
+      mover.on('Start', function (x, y) {
+        undoStack.push(function () {
+          pinterface.start = x * zoomFactor;
+          tf.style(node, {
+            left: x + 'px'
+          });
+          resizeBody();
+          calcStartEnd();
+          events.emit('Moved');
+        });
+      });
+      
       mover.on('Moving', function (x, y) {
         //Recalc start
-        pinterface.start = x * zoomFactor;
-        
+        pinterface.start = x * zoomFactor;        
       });
       
       mover.on('Done', function () {
@@ -249,6 +278,11 @@ SOFTWARE.
       });
       
       tf.on(node, 'contextmenu', function (e) {
+        //Add undo command
+        undoStack.push(function () {
+          plane.addBlockAtTime(pinterface.start, pinterface.toJSON());
+        });
+        
         //Delete the block..
         pinterface.destroy();        
         return tf.nodefault(e);
@@ -273,7 +307,9 @@ SOFTWARE.
           resizer = tf.Resizer(body, container, 'Y'),
           dropTarget = tf.DropTarget(body, 'block block-move'),
           blocks = [],
-          bottomBlock = false        
+          bottomBlock = false,
+          id = (typeof uuid !== 'undefined') ? uuid.v4() : (++lcount),
+          exports = {}        
       ;           
             
       //Sort blocks
@@ -309,6 +345,10 @@ SOFTWARE.
         
         calcStartEnd();
         
+        undoStack.push(function () {
+          b.destroy();
+        });
+        
         return b;
       }
       
@@ -317,7 +357,7 @@ SOFTWARE.
         var b = Block(body, {
           start: t,
           length: length || 100
-        });
+        }, exports);
         return addBlock(b);
       }
       
@@ -325,7 +365,7 @@ SOFTWARE.
       function addBlockAtPixel(x, attrs) {
         var b = Block(body, tf.merge(attrs || {}, {
           start: x * zoomFactor
-        }));        
+        }), exports);        
         return addBlock(b);
       }
       
@@ -350,6 +390,10 @@ SOFTWARE.
         container.parentNode.removeChild(container);
         container.innerHTML = '';
         events.emit('Destroy');
+        
+        undoStack.push(function () {
+          
+        });
       }
       
       //Recalc the bottom block based on the current time
@@ -446,7 +490,7 @@ SOFTWARE.
         tf.ap(parent, container);
       }
       
-      return {
+      exports = {
         recalcBottomBlock: recalcBottomBlock,
         removeBlock: removeBlock,
         destroy: destroy,
@@ -461,7 +505,9 @@ SOFTWARE.
         fromJSON: fromJSON,
         count: count,
         getBlock: getBlock
-      }
+      };
+      
+      return exports;
     } 
   
     /////////////////////////////////////////////////////////////////////////////
@@ -669,6 +715,12 @@ SOFTWARE.
       updatePlayOffset();
     }
     
+    function undo() {
+      if (undoStack.length > 0) {
+        undoStack[undoStack.length - 1]();
+        undoStack.splice(undoStack.length - 1, 1);
+      }
+    }    
     
     /////////////////////////////////////////////////////////////////////////////
            
@@ -719,6 +771,7 @@ SOFTWARE.
       pause: pause,
       gotoStart: gotoStart,
       gotoEnd: gotoEnd,
+      undo: undo,
       
       looping: function (flag) {looping = flag; calcEnd();},
       isLooping: function () {return looping;},

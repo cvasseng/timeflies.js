@@ -70,6 +70,7 @@
         <button onclick="sequencer.pause()">PAUSE</button>
         <button onclick="sequencer.looping(!sequencer.isLooping());sequencer.isLooping() ? this.innerHTML = 'DISABLE LOOPING' : this.innerHTML = 'ENABLE LOOPING';">ENABLE LOOPING</button>
         <button onclick="sequencer.gotoEnd()">&gt;&gt;</button>
+        <button onclick="sequencer.undo()">UNDO</button>
       </div>
       
       <div id="sequencer" class="sequencer tf-box-size"></div>
@@ -81,6 +82,16 @@
       </div>
     </body>
     <script>
+      
+      //Create a sequencer instance, and add it to document.body
+      var sequencer = tf.Sequencer('sequencer', {
+        initialLanes: 10
+      });
+      
+      //Zoom the sequencer
+      function doZoom(sender) {
+        sequencer.zoom(parseFloat(400 - parseInt(sender.value, 10)) / 10);  
+      }            
       
       function addKey() {
         //Need to resolve the block here.
@@ -98,6 +109,9 @@
       
       ///////////////////////////////////////////////////////////////////////// 
       
+      //Makes a DIV movable and exposes the current pos.
+      //This is meant to serve as an example on how to attach
+      //a controller to a block.
       function AnimatableDiv(div) {
         if (tf.isStr(div)) {
           div = document.getElementById(div);
@@ -116,73 +130,7 @@
           node: div,
           pos: pos
         };
-      }
-            
-      /////////////////////////////////////////////////////////////////////////  
-      
-      //We need a separate mover for SVG nodes..
-      function SVGMover(handle, opos) {
-        var events = tf.events(),
-            moving = false,
-            delta = {x: 0, y: 0},
-            pos = {x: 0, y: 0},
-            opos = {x: 0, y: 0}
-        ;
-      
-        if (!handle) {
-          handle = target;
-        }
-      
-        tf.on(handle, 'mousedown', function (e) {
-          var upper, 
-              mover
-          ;
-      
-          if (e.shiftKey) {
-            return;
-          }
-      
-          opos = {
-            x: handle.x.baseVal.value,
-            y: handle.y.baseVal.value 
-          };
-      
-          delta.x = e.clientX;
-          delta.y = e.clientY;
-      
-          moving = true;
-      
-          upper = tf.on(document.body, 'mouseup', function (e) {
-            upper();
-            mover();
-      
-            events.emit('Done', pos.x, pos.y);
-            
-            moving = false;
-            return tf.nodefault(e);
-          });
-      
-          mover = tf.on(document.body, 'mousemove', function (e) {
-            if (moving) {
-              pos.x = opos.x + (e.clientX - delta.x);
-              pos.y = opos.y + (e.clientY - delta.y);
-              if (pos.x < 0) pos.x = 0;
-                   
-              handle.setAttributeNS(null, 'x', pos.x); 
-              //handle.setAttributeNS(null, 'y', pos.y); 
-                                 
-              events.emit('Moving', pos.x, pos.y);
-            }
-            return tf.nodefault(e);
-          });
-      
-          return tf.nodefault(e);
-        });
-      
-        return {
-          on: events.on
-        };
-      };
+      }                  
           
       /////////////////////////////////////////////////////////////////////////      
       
@@ -197,47 +145,43 @@
           vy: 0,
           btime: 0
         },
-        construct: function (parent, on) {
+        construct: function (block, parent) {
           //Attach to the thing - note that the idea is that this string
           //can be part of the state, and thus supplied on block construction.
           this.thing = AnimatableDiv('thing');
           this.thing.node.style.display = 'block';
           
           //This is kinda ugly, but it works..
-          this.addKey = (function (self) {
-            return function () {
-              //Add a key on the current local time
-              self.keyframes.push({
-                t: self.btime,
-                x: self.thing.pos.x,
-                y: self.thing.pos.y
-              });
-              sort(self);
-              build(self);
-            }
-          })(this);
+          this.addKey = function () {
+            //Add a key on the current local time
+            block.state.keyframes.push({
+              t: block.state.btime,
+              x: block.state.thing.pos.x,
+              y: block.state.thing.pos.y
+            });
+            sort();
+            build(self);            
+          };
           
-          this.editKey = (function (self) {
-            return function () {
-              if (self.selected) {
-                self.selected.frame.x = self.thing.pos.x;
-                self.selected.frame.y = self.thing.pos.y;
-              }
-            };
-          })(this);
+          this.editKey = function () {
+            if (block.state.selected) {
+              block.state.selected.frame.x = block.state.thing.pos.x;
+              block.state.selected.frame.y = block.state.thing.pos.y;
+            }
+          };
           
           //Sort the keyframes
-          function sort(self) {
-            self.keyframes = self.keyframes.sort(function (a, b) {  
+          function sort() {
+            block.state.keyframes = block.state.keyframes.sort(function (a, b) {  
               return a.t > b.t;
             });
             
-            if (self.keyframes.length > 0) {
-              self.keyframes[0].t = 0;
+            if (block.state.keyframes.length > 0) {
+              block.state.keyframes[0].t = 0;
             }
             
-            if (self.keyframes.length > 1) {
-              self.keyframes[self.keyframes.length - 1].t = 1;
+            if (block.state.keyframes.length > 1) {
+              block.state.keyframes[block.state.keyframes.length - 1].t = 1;
             }
           }
           
@@ -254,37 +198,37 @@
           }
           
           //Build the keyframer
-          function build(self) {
+          function build() {
             var width = tf.size(parent).w - 10,
                 height = tf.size(parent).h
             ;
           
             svg.innerHTML = '';
             
-            self.keyframes.forEach(function (frame) {               
+            block.state.keyframes.forEach(function (frame) {               
                var n = SVGKeyFrame(frame.t * width, 0, height),
                    mover
                ;
                
                tf.on(n, 'contextmenu', function (e) {
-                if (self.keyframes.length === 1) return tf.nodefault(e);
+                if (block.state.keyframes.length === 1) return tf.nodefault(e);
                 
-                self.keyframes = self.keyframes.filter(function (f) {
+                block.state.keyframes = block.state.keyframes.filter(function (f) {
                   return frame !== f;                  
                 });
-                sort(self);
-                build(self);
+                sort();
+                build();
                 return tf.nodefault(e);
                });
                
                tf.on(n, 'mousedown', function (e) {
                  if (!e.shiftKey) return;
                  
-                 if (self.selected) {
-                   self.selected.n.setAttributeNS(null, 'fill', '#FFF');
+                 if (block.state.selected) {
+                   block.state.selected.n.setAttributeNS(null, 'fill', '#FFF');
                  }
                  
-                 self.selected = {
+                 block.state.selected = {
                    frame: frame,
                    n: n
                  };
@@ -292,21 +236,19 @@
                  return tf.nodefault(e);
                });
                
-               mover = SVGMover(n, frame.t * width, 0);
+               mover = tf.Mover(n, n, 'X', true);
                
                mover.on('Done', function (x) {
                  frame.t = x / width;
-                 sort(self);
-                 build(self);                 
-               });
-               
+                 sort();
+                 build();                 
+               });               
             });
           }
           
           //Create a simple UI
           var svgNS = 'http://www.w3.org/2000/svg',
-              svg = document.createElementNS(svgNS,'svg'),
-              listeners = []
+              svg = document.createElementNS(svgNS,'svg')
           ;
           
           //Need to set some properties to the svg node
@@ -314,7 +256,8 @@
           svg.setAttributeNS(null, 'width', '100%');
           svg.setAttributeNS(null, 'viewbox', '0 0 3 2');
           
-          on('Resize', build);
+          //Rebuild when the block is resized
+          block.on('Resize', build);
           
           //Append the UI to the block node
           tf.ap(parent,
@@ -363,20 +306,9 @@
         }
         
       });
-      
-      
+            
       /////////////////////////////////////////////////////////////////////////
-      
-      //Zoom the sequencer
-      function doZoom(sender) {
-        sequencer.zoom(parseFloat(400 - parseInt(sender.value, 10)) / 10);  
-      }
-      
-      //Create a sequencer instance, and add it to document.body
-      var sequencer = tf.Sequencer('sequencer', {
-        initialLanes: 10
-      });
-      
+          
       //Proces the sequencer every 100ms (NOTE: should use requestAnimationFrame instead, with a fallback to setInterval)
       setInterval(sequencer.process, 100);
       

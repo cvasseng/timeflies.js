@@ -19,6 +19,7 @@ Suggested use cases include:
   * Blocks are freeform, and can be moved across lanes (by holding shift and dragging), moved (by dragging), and resized (by grabbing the resize handle on the far-right)  
   * Lanes can be vertically resized interactively, to make room for e.g. a spline editor inside a block
   * Liberally licensed    
+  * Undo
       
 #Building
  

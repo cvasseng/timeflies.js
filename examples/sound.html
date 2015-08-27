@@ -42,6 +42,7 @@
         <button onclick="sequencer.pause()">PAUSE</button>
         <button onclick="sequencer.looping(!sequencer.isLooping());sequencer.isLooping() ? this.innerHTML = 'DISABLE LOOPING' : this.innerHTML = 'ENABLE LOOPING';">ENABLE LOOPING</button>
         <button onclick="sequencer.gotoEnd()">&gt;&gt;</button>
+        <button onclick="sequencer.undo()">UNDO</button>
       </div>
       
     
@@ -54,14 +55,14 @@
           file: 'schu.m4a',
           lastTime: 0
         },
-        construct: function (parent, on, inter, setTitle) {
-          this.audio = new Audio(this.file);
+        construct: function (block, parent) {
+          block.state.audio = new Audio(this.file);
           
           sequencer.on('SetTime', function (t) {
-            this.audio.currentTime = (t - inter.start) / 1000;
-          }, this);
+            block.state.audio.currentTime = (t - inter.start) / 1000;
+          });
           
-          setTitle(this.file);
+          block.setTitle(block.state.file);
         },
         stopProcess: function (timeMs) {
           this.audio.pause();
