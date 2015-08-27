@@ -34,7 +34,8 @@ tf.Resizer = function (handle, target, dir) {
       enabled = true,
       mainHandle = false,
       direction = dir || 'XY',
-      minSize = {w: 0, h: 0}
+      minSize = {w: 0, h: 0},
+      snap = 1
   ;
 
   if (!handle) {
@@ -74,7 +75,7 @@ tf.Resizer = function (handle, target, dir) {
   
       moving = true;
       
-      events.emit('Start');
+      events.emit('Start', osize.w, osize.h);
   
       upper = tf.on(document.body, 'mouseup', function (e) {
         upper();
@@ -88,7 +89,7 @@ tf.Resizer = function (handle, target, dir) {
         if (moving) {          
           
           if (direction === 'X' || direction === 'XY') {
-            size.w = osize.w + (e.clientX - delta.x);
+            size.w = snap * Math.floor((osize.w + (e.clientX - delta.x)) / snap);
             if (size.w < minSize.w) size.w = minSize.w;
             tf.style(target, {
               width: size.w + 'px'
