@@ -96,7 +96,7 @@ tf.Resizer = function (handle, target, dir) {
             });  
           }
           
-          if (direction === 'Y' || direction === 'Y') {            
+          if (direction === 'Y' || direction === 'XY') {            
             size.h = osize.h + (e.clientY - delta.y);
             if (size.h < minSize.h) size.h = minSize.h;
             tf.style(target, {
@@ -119,6 +119,9 @@ tf.Resizer = function (handle, target, dir) {
     destroy: destroy,
     on: events.on,
     enable: enable,
-    disable: disable
+    disable: disable,
+    setAxis: function (ax) {
+      direction = ax;
+    }
   };
 };

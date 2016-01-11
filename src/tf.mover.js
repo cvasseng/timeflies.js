@@ -71,16 +71,19 @@ SOFTWARE.
     moving = true;
 
     upper = tf.on(document.body, 'mouseup', function (e) {
-      upper();
-      mover();
-
-      events.emit('Done', pos.x, pos.y);
-      
-      moving = false;
-      return tf.nodefault(e);
+      if (moving) {
+        upper();
+        mover();
+  
+        events.emit('Done', pos.x, pos.y);
+        
+        moving = false;
+        return tf.nodefault(e);
+      }
     });
 
     mover = tf.on(document.body, 'mousemove', function (e) {
+      console.log('moving! ' + moving);
       if (moving) {
 
         if (!axis || axis === 'X' || axis === 'XY') {
@@ -107,8 +110,8 @@ SOFTWARE.
         }
 
         events.emit('Moving', pos.x, pos.y);
+        return tf.nodefault(e);
       }
-      return tf.nodefault(e);
     });
     
     events.emit('Start', opos.x, opos.y);
@@ -119,6 +122,9 @@ SOFTWARE.
   return {
     on: events.on,
     enable: enable,
-    disable: disable
+    disable: disable,
+    setAxis: function (ax) {
+      axis = ax;
+    }
   };
  };

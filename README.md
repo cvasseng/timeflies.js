@@ -280,13 +280,13 @@ Example: create a Movable DIV:
     }
     
     var node = tf.cr('div', 'movable', 'Move me!');   
-    tf.Mover(node, node);
+    tf.Mover(node);
     tf.ap(document.body, node);
     
 Example: create a resizable DIV:
     
     var node = tf.cr('div', '', 'Resize me!'); 
-    tf.Resizer(node, node);
+    tf.Resizer(node);
     tf.ap(document.body, node);
 
 # License
