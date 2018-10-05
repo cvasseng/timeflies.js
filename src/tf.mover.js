@@ -2,7 +2,7 @@
 
 Timeflies.js
 
-Copyright (c) 2015 Chris Vasseng
+Copyright (c) 2015-2018 Chris Vasseng
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,33 +24,48 @@ SOFTWARE.
 
 
 ******************************************************************************/
- 
- tf.Mover = function (handle, target, axis, isSVG) {
-  var events = tf.events(),
-      moving = false,
-      delta = {x: 0, y: 0},
-      pos = {x: 0, y: 0},
-      opos = {x: 0, y: 0},
-      enabled = true,
-      snap = 1
-  ;
+
+import tf from './tf.js';
+import dom from './tf.dom.js';
+import Events from './tf.events.js';
+
+export const Mover = (handle, target, axis, isSVG) => {
+  const events = Events();
+
+  let moving = false;
+  let enabled = true;
+  let snap = 1;
+
+  let delta = {
+    x: 0,
+    y: 0
+  };
+
+  let pos = {
+    x: 0,
+    y: 0
+  };
+
+  let opos = {
+    x: 0,
+    y: 0
+  };
 
   if (!handle) {
     handle = target;
   }
 
-  function enable() {
+  const enable = () => {
     enabled = true;
-  }
+  };
 
-  function disable() {
+  const disable = () => {
     enabled = false;
-  }
+  };
 
-  tf.on(handle, 'mousedown', function (e) {
-    var upper, 
-        mover
-    ;
+  dom.on(handle, 'mousedown', function (e) {
+    let upper;
+    let mover;
 
     if (!enabled || e.shiftKey) {
       return;
@@ -62,7 +77,7 @@ SOFTWARE.
         y: target.y.baseVal.value
       };
     } else {
-      opos = tf.pos(target);      
+      opos = dom.pos(target);
     }
 
     delta.x = e.clientX;
@@ -70,42 +85,41 @@ SOFTWARE.
 
     moving = true;
 
-    upper = tf.on(document.body, 'mouseup', function (e) {
+    upper = dom.on(document.body, 'mouseup', function (e) {
       if (moving) {
         upper();
         mover();
-  
+
         events.emit('Done', pos.x, pos.y);
-        
+
         moving = false;
-        return tf.nodefault(e);
+        return dom.nodefault(e);
       }
     });
 
-    mover = tf.on(document.body, 'mousemove', function (e) {
-      console.log('moving! ' + moving);
+    mover = dom.on(document.body, 'mousemove', (e) => {
       if (moving) {
 
         if (!axis || axis === 'X' || axis === 'XY') {
           pos.x = snap * Math.floor( (opos.x + (e.clientX - delta.x)) / snap);
           if (pos.x < 0) pos.x = 0;
           if (isSVG) {
-            target.setAttributeNS(null, 'x', pos.x); 
-          } else {           
+            target.setAttributeNS(null, 'x', pos.x);
+          } else {
             tf.style(target, {
-              left: pos.x + 'px'            
-            });  
+              left: pos.x + 'px'
+            });
           }
         }
-        
+
         if (!axis || axis === 'Y' || axis === 'XY') {
           pos.y = opos.y + (e.clientY - delta.y);
           if (isSVG) {
             target.setAttributeNS(null, 'y', pos.y);
-          } else {            
-            tf.style(target, {         
+          } else {
+            tf.style(target, {
               top: pos.y + 'px'
-            });          
+            });
           }
         }
 
@@ -113,9 +127,9 @@ SOFTWARE.
         return tf.nodefault(e);
       }
     });
-    
+
     events.emit('Start', opos.x, opos.y);
-    
+
     return tf.nodefault(e);
   });
 
@@ -128,3 +142,5 @@ SOFTWARE.
     }
   };
  };
+
+export default Mover;

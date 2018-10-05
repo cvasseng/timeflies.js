@@ -25,59 +25,51 @@ SOFTWARE.
 
 ******************************************************************************/
 
-export const Events = () => {
-  let listeners = {};
-  let count = 0;
+// @format
 
-  const emit = (which, ...args) => {
-    if (listeners[which]) {
-      listeners[which].forEach(function (listener) {
-        listener.fn.apply(listener.ctx, args);
-      });
-    }
+import Logger from './tf.logger.js';
+import { merge } from './tf.js';
+
+const log = Logger('block pool');
+
+let blockPool = {};
+
+export const RegisterBlock = (name, attributes) => {
+  if (!name) {
+    return log.error('block name is required');
+  }
+
+  if (blockPool[name]) {
+    return log.error('block', name, 'already exists');
+  }
+
+  const notImplemented = () => {
+    // Consider logging or something
   };
 
-  const clear = () => {
-    listeners = {};
-  };
+  let block = merge(
+    {
+      state: {},
+      process: notImplemented,
+      startProcess: notImplemented,
+      stopProcess: notImplemented,
+      construct: notImplemented,
+      destroy: notImplemented,
+      title: notImplemented
+    },
+    attributes
+  );
 
-  const on = (evnt, fn, ctx) => {
-    let id = (typeof uuid !== 'undefined') ? uuid.v4() : (++count); // eslint-disable-line no-undef
-    let s = [];
+  blockPool[name] = block;
 
-    // Handle binding multiple things to the same event
-    if (evnt && evnt.forEach) {
-      evnt.forEach((v) => {
-        s.push(on(v, fn, ctx));
-      });
-
-      return () => {
-        s.forEach((f) => {
-          f();
-        });
-      };
-    }
-
-    listeners[evnt] = listeners[evnt] || [];
-
-    listeners[evnt].push({
-      id: id,
-      fn: fn,
-      ctx: ctx
-    });
-
-    return () => {
-      listeners[evnt] = listeners[evnt].filter((b) => {
-        return b.id !== id;
-      });
-    };
-  };
-
-  return {
-    emit,
-    on,
-    clear
-  };
+  return block;
 };
 
-export default Events;
+export const getBlockPrototype = name => {
+  return blockPool[name] || false;
+};
+
+export default {
+  RegisterBlock,
+  getBlockPrototype
+};

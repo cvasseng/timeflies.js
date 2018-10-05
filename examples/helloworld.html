@@ -4,15 +4,7 @@
     <title>timeflies.js</title>
 
     <link href='http://fonts.googleapis.com/css?family=Roboto:300,400,700' rel='stylesheet' type='text/css'>
-    <link href='./css/light.css' rel='stylesheet' type='text/css'>
-   
-    <script src="./src/tf.js"></script>
-    <script src="./src/tf.events.js"></script>
-    <script src="./src/tf.resizer.js"></script>
-    <script src="./src/tf.mover.js"></script>
-    <script src="./src/tf.dnd.js"></script>
-    <script src="./src/tf.timeline.js"></script>
-   
+    <link href='./../less/light.less' rel='stylesheet' type='text/css'>
     <style>     
        html, body {
         padding:0;
@@ -45,43 +37,7 @@
         <button onclick="sequencer.gotoEnd()">&gt;&gt;</button>
         <button onclick="sequencer.undo()">UNDO</button>
       </div>
-    <script>
-      
-      //Zoom the sequencer
-      function doZoom(sender) {
-        sequencer.zoom(parseFloat(400 - parseInt(sender.value, 10)) / 10);  
-      }
-      
-      //Create a sequencer instance, and add it to document.body
-      var sequencer = tf.Sequencer(document.body, {
-        initialLanes: 10
-      });
-      
-      //Add a custom block to the block pool
-      tf.RegisterBlockType('My Block Type', {
-        process: function (blockTime) {
-          //This function is called when the block is "active".
-          //blockTime contains the current time from 0..1, where 0 is the start
-          //of the block, and 1 is the end. 
-          //For a list of all possible callbacks in tf.RegisterBlockType,
-          //refer to the README in the root directory.
-        }
-      });
-     
-      //Proces the sequencer every 100ms (NOTE: should use requestAnimationFrame instead, with a fallback to setInterval)
-      setInterval(sequencer.process, 100);
-      
-      //Create a draggable div that creates a My Block Type block on the lane it's dropped on
-      tf.ap(document.body, 
-        tf.Draggable(tf.cr('div', 'draggable', 'Drag me on to a lane!'), 'block', {          
-         type: 'My Block Type'
-        }).target        
-      );
-            
-      //Set the time to 0
-      sequencer.setTime(0);
-      //Resize the sequencer
-      sequencer.resize();
-      
-    </script>
+    </body>
+
+    <script src="helloworld.js"></script>
 </html>

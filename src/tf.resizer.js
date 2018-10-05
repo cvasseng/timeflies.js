@@ -24,94 +24,114 @@ SOFTWARE.
 
 
 ******************************************************************************/
- 
-tf.Resizer = function (handle, target, dir) {
-  var events = tf.events(),
-      moving = false,
-      delta = {x: 0, y: 0},
-      size = {w: 0, h: 0},
-      osize = {w: 0, h: 0},
-      enabled = true,
-      mainHandle = false,
-      direction = dir || 'XY',
-      minSize = {w: 0, h: 0},
-      snap = 1
-  ;
+
+// @format
+
+import Events from './tf.events.js';
+import dom from './tf.dom.js';
+
+export const Resizer = (handle, target, dir) => {
+  const events = Events();
+  let moving = false;
+  let enabled = true;
+  let mainHandle = false;
+  let direction = dir || 'XY';
+  let snap = 1;
+
+  let delta = {
+    x: 0,
+    y: 0
+  };
+
+  let size = {
+    w: 0,
+    h: 0
+  };
+
+  let osize = {
+    w: 0,
+    h: 0
+  };
+
+  let minSize = {
+    w: 0,
+    h: 0
+  };
 
   if (!handle) {
     handle = target;
   }
 
-  function enable() {
+  const enable = () => {
     enabled = true;
-  }
+  };
 
-  function disable() {
+  const disable = () => {
     enabled = false;
-  }
-  
-  function destroy() {
+  };
+
+  const destroy = () => {
     if (mainHandle) {
       mainHandle();
     }
-  }
+  };
 
-  function create() {
+  const create = () => {
     destroy();
-    
-    mainHandle = tf.on(handle, 'mousedown', function (e) {
-      var upper, 
-          mover
-      ;
-  
+
+    mainHandle = dom.on(handle, 'mousedown', e => {
+      let upper;
+      let mover;
+
       if (!enabled || e.shiftKey) {
         return;
       }
-  
-      osize = tf.size(target);
-  
+
+      osize = dom.size(target);
+
       delta.x = e.clientX;
       delta.y = e.clientY;
-  
+
       moving = true;
-      
+
       events.emit('Start', osize.w, osize.h);
-  
-      upper = tf.on(document.body, 'mouseup', function (e) {
+
+      upper = dom.on(document.body, 'mouseup', e => {
         upper();
-        mover();   
+        mover();
         moving = false;
         events.emit('Done', size.w, size.h);
-        return tf.nodefault(e);
+
+        return dom.nodefault(e);
       });
-  
-      mover = tf.on(document.body, 'mousemove', function (e) {
-        if (moving) {          
-          
+
+      mover = dom.on(document.body, 'mousemove', e => {
+        if (moving) {
           if (direction === 'X' || direction === 'XY') {
-            size.w = snap * Math.floor((osize.w + (e.clientX - delta.x)) / snap);
+            size.w =
+              snap * Math.floor((osize.w + (e.clientX - delta.x)) / snap);
             if (size.w < minSize.w) size.w = minSize.w;
-            tf.style(target, {
+            dom.style(target, {
               width: size.w + 'px'
-            });  
+            });
           }
-          
-          if (direction === 'Y' || direction === 'XY') {            
+
+          if (direction === 'Y' || direction === 'XY') {
             size.h = osize.h + (e.clientY - delta.y);
             if (size.h < minSize.h) size.h = minSize.h;
-            tf.style(target, {
+            dom.style(target, {
               height: size.h + 'px'
             });
           }
-  
+
           events.emit('Resizing', size.w, size.h);
         }
-        return tf.nodefault(e);
+        return dom.nodefault(e);
       });
-      return tf.nodefault(e);
+      return dom.nodefault(e);
     });
-  }
-  
+  };
+
   create();
 
   return {
@@ -120,8 +140,10 @@ tf.Resizer = function (handle, target, dir) {
     on: events.on,
     enable: enable,
     disable: disable,
-    setAxis: function (ax) {
+    setAxis: ax => {
       direction = ax;
     }
   };
 };
+
+export default Resizer;

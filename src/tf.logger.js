@@ -25,59 +25,16 @@ SOFTWARE.
 
 ******************************************************************************/
 
-export const Events = () => {
-  let listeners = {};
-  let count = 0;
+// @format
 
-  const emit = (which, ...args) => {
-    if (listeners[which]) {
-      listeners[which].forEach(function (listener) {
-        listener.fn.apply(listener.ctx, args);
-      });
-    }
-  };
-
-  const clear = () => {
-    listeners = {};
-  };
-
-  const on = (evnt, fn, ctx) => {
-    let id = (typeof uuid !== 'undefined') ? uuid.v4() : (++count); // eslint-disable-line no-undef
-    let s = [];
-
-    // Handle binding multiple things to the same event
-    if (evnt && evnt.forEach) {
-      evnt.forEach((v) => {
-        s.push(on(v, fn, ctx));
-      });
-
-      return () => {
-        s.forEach((f) => {
-          f();
-        });
-      };
-    }
-
-    listeners[evnt] = listeners[evnt] || [];
-
-    listeners[evnt].push({
-      id: id,
-      fn: fn,
-      ctx: ctx
-    });
-
-    return () => {
-      listeners[evnt] = listeners[evnt].filter((b) => {
-        return b.id !== id;
-      });
-    };
+export default namespace => {
+  const getOutput = (...args) => {
+    return '[' + namespace + '] - ' + args.join(' ');
   };
 
   return {
-    emit,
-    on,
-    clear
+    silly: (...args) => console.log(getOutput(args)), // eslint-disable-line no-console
+    warn: (...args) => console.warn(getOutput(args)), // eslint-disable-line no-console
+    error: (...args) => console.error(getOutput(args)) // eslint-disable-line no-console
   };
 };
-
-export default Events;

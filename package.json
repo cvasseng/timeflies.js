@@ -3,12 +3,32 @@
   "name": "timeline.js",
   "description": "Timeline Editor",
   "version": "0.0.1",
-  "private":true,
-  "bin": {
-  
+  "private": true,
+  "bin": {},
+  "scripts": {
+    "build": "parcel build src/timeflies.js"
   },
-  "dependencies": {    
-    "express": "~4.12.0",   
-    "express-less": "*"    
+  "lint-staged": {
+    "src/*.js": [
+      "prettier --single-quote --write",
+      "git add"
+    ],
+    "less/*.{.less}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "alias": {
+    "tf": "./src/timeflies.js"
+  },
+  "devDependencies": {
+    "husky": "^0.14.3",
+    "lint-staged": "^7.2.0",
+    "prettier": "^1.14.0",
+    "parcel-bundler": "*"
+  },
+  "dependencies": {
+    "express": "~4.12.0",
+    "express-less": "*"
   }
 }
