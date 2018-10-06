@@ -38,7 +38,7 @@
   color:@text;
   font-family:@font;
   position:relative;
-  height:600px;
+  height:100%;
   width:100%;
   border-bottom:1px solid @background-alt;
   overflow:hidden;
@@ -61,7 +61,7 @@
 
 .tl-time-indicator .time {
   position:absolute;
-  top:0px;
+  top:2px;
   padding-bottom:1px;
   display:inline-block;
   border-left:1px solid @timemarks;
@@ -81,10 +81,20 @@
   left:220px;
   height:100%;
   width:2px;
-  top:10px;
+  top:45px;
   background:#AA0000;
   z-index:1;
 }
 
+.tl-time-marker-handle {
+  width: 0; 
+  height: 0; 
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid #AA0000;
+  transform: translate(-7px, 0);
+}
+
 @import "lane.less";
+@import "controls.less";
 //@import "block.less";

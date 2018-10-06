@@ -6,27 +6,25 @@
 }
 
 .tl-lane:hover {
-  background:@background-highlight !important;
-  color:@text-highlight !important;
-  border-top: 5px solid @background-highlight !important;
-  border-bottom: 5px solid @background-highlight !important;
+  // background:@background-highlight !important;
+  // color:@text-highlight !important;
+  // border-top: 5px solid @background-highlight !important;
+  // border-bottom: 5px solid @background-highlight !important;
 }
 
 .timeline-js .tl-lane:nth-child(odd) {
-  background:@background-alt;
+  background:@lane-background;
   color:@text-alt;
-  border-top: 5px solid @background-alt;
-  border-bottom: 5px solid @background-alt;
+  border-top: 5px solid @lane-background;
+  border-bottom: 5px solid @lane-background;
 }
 
 .timeline-js .tl-lane:nth-child(even) {
-  background:@background;
+  background:@lane-background-alt;
   color:@text;
-  border-top: 5px solid @background;
-  border-bottom: 5px solid @background;
+  border-top: 5px solid @lane-background-alt;
+  border-bottom: 5px solid @lane-background-alt;
 }
-
-
 
 .tl-lane .lane-title-box {
   position:relative;
@@ -105,6 +103,14 @@
   
 
   
+}
+
+.tl-lane .block-title {
+
+}
+
+.tl-lane .block-subtitle {
+  margin-top: 5px;
 }
 
 .tl-lane .block-focused {  

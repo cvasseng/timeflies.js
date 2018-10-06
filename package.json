@@ -6,7 +6,7 @@
   "private": true,
   "bin": {},
   "scripts": {
-    "build": "parcel build src/timeflies.js"
+    "build": "parcel build src/timeflies.js less/dark.less less/light.less"
   },
   "lint-staged": {
     "src/*.js": [

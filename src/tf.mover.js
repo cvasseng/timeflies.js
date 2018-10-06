@@ -25,7 +25,6 @@ SOFTWARE.
 
 ******************************************************************************/
 
-import tf from './tf.js';
 import dom from './tf.dom.js';
 import Events from './tf.events.js';
 
@@ -106,7 +105,7 @@ export const Mover = (handle, target, axis, isSVG) => {
           if (isSVG) {
             target.setAttributeNS(null, 'x', pos.x);
           } else {
-            tf.style(target, {
+            dom.style(target, {
               left: pos.x + 'px'
             });
           }
@@ -117,20 +116,20 @@ export const Mover = (handle, target, axis, isSVG) => {
           if (isSVG) {
             target.setAttributeNS(null, 'y', pos.y);
           } else {
-            tf.style(target, {
+            dom.style(target, {
               top: pos.y + 'px'
             });
           }
         }
 
         events.emit('Moving', pos.x, pos.y);
-        return tf.nodefault(e);
+        return dom.nodefault(e);
       }
     });
 
     events.emit('Start', opos.x, opos.y);
 
-    return tf.nodefault(e);
+    return dom.nodefault(e);
   });
 
   return {

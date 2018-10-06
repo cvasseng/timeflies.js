@@ -66,7 +66,7 @@ export const Draggable = (target, type, payload) => {
 // Turn a node into a drop target
 export const DropTarget = (target, types) => {
   const events = Events();
-  let enabled = false;
+  let enabled = true;
   let callbacks = [];
 
   const nodef = e => {

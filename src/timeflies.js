@@ -29,6 +29,7 @@ SOFTWARE.
 
 // @format
 
+import Controls from './tf.controls.js';
 import Timeline from './tf.timeline.js';
 import { Draggable, DropTarget } from './tf.dnd.js';
 import dom from './tf.dom.js';
@@ -36,6 +37,7 @@ import { RegisterBlock } from './tf.library.js';
 
 export const tf = {
   Timeline,
+  Controls,
   Draggable,
   DropTarget,
   RegisterBlock,

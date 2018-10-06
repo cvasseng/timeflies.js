@@ -2,6 +2,8 @@
 
 ![Screenshot](screenshots/alpha2.png)
 
+[![Waffle.io - Columns and their card count](https://badge.waffle.io/cvasseng/timeflies.js.svg?columns=all)](https://waffle.io/cvasseng/timeflies.js) 
+
 **JavaScript Timeline/sequencer UI Widget**
 
 Suggested use cases include:
@@ -21,24 +23,19 @@ Suggested use cases include:
   * Liberally licensed    
   * Undo
       
-#Building
- 
-To build timeflies.js, you need [bakor](https://github.com/iqumulus/bakor/) installed. Bakor is a node module, 
-and must be installed globally, i.e. `npm install -g bakor`.
-Once installed, build by running `bakor` in the timeflies.js root directory.
+# Using with NPM
 
-This will produce a set of files in the `./build/` directory which can be included in your application.
- 
-#Examples
+# Building
 
-Examples can be found in the [examples](/examples) folder. There's a simple express server in the repository ([/bin/www](/bin/www)).
-To use this, first run `npm install` in the root directory (or `sudo npm install` on OSX), then run `node bin/www`.
-This will start an HTTP server serving up the examples-folder on port `3050`. Note that you **have to** run this server for the examples to work
-properly, as they use the "unbuilt" sources - both for the JavaSript, and for the CSS. 
- 
-After starting the server as descripted above, go to [http://127.0.0.1:3050/helloworld.html](http://127.0.0.1:3050/helloworld.html) in your browser for a full listing of examples.
- 
-#Usage and API Reference
+TODO.
+
+# Examples
+
+Check out the examples folder.
+
+The samples can be served up by using `parcel example/<filename>.html`.
+
+# Usage and API Reference
 
 **Creating a timeline control**
     

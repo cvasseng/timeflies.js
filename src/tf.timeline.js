@@ -25,10 +25,11 @@ SOFTWARE.
 
 ******************************************************************************/
 
-/* @global requestAnimationFrame */
+/* global requestAnimationFrame */
 
 // @format
 
+import Controls from './tf.controls.js';
 import Resizer from './tf.resizer.js';
 import Mover from './tf.mover.js';
 import tf from './tf.js';
@@ -44,12 +45,14 @@ export const Timeline = (parent, attrs) => {
   let timeContainer = dom.cr('div', 'tl-time-indicator');
   let timeMarker = dom.cr('div', 'tl-time-marker');
   let laneBox = dom.cr('div', 'tl-lane-container');
+  let controlContainer = dom.cr('div');
 
   let properties = tf.merge(
     {
       initialLanes: 10,
       initialZoom: 1,
-      looping: false
+      looping: false,
+      showControls: true
     },
     attrs
   );
@@ -67,6 +70,8 @@ export const Timeline = (parent, attrs) => {
   let startTime = 50000;
   let looping = properties.looping;
   let undoStack = [];
+  let exports = {};
+  let controls = false;
 
   // Create a block
   const Block = (parent, attrs, plane) => {
@@ -88,7 +93,12 @@ export const Timeline = (parent, attrs) => {
     let node = dom.cr('div', 'block tl-transition-color');
     let body = dom.cr('div', 'block-body');
     let sizer = dom.cr('div', 'block-sizer tl-transition-color');
-    let title = dom.cr('span', '', pinterface.type);
+    let title = dom.cr('span', 'block-title', pinterface.type);
+    let subtitle = dom.cr(
+      'div',
+      'block-subtitle tl-transition-opacity',
+      pinterface.type
+    );
 
     let resizer = Resizer(sizer, node, 'X');
     let mover = Mover(node, node, 'X');
@@ -124,10 +134,24 @@ export const Timeline = (parent, attrs) => {
     };
 
     const resizeBody = () => {
+      let nh = dom.size(node).h - 25;
+
       dom.style(body, {
         width: size.w - 10 + 'px',
-        height: dom.size(node).h - 25 + 'px'
+        height: nh + 'px'
       });
+
+      if (nh > 32) {
+        // Show subtitle
+        dom.style(subtitle, {
+          opacity: 1
+        });
+      } else {
+        // Hide subtitle
+        dom.style(subtitle, {
+          opacity: 0
+        });
+      }
 
       events.emit('Resize', pinterface.state);
     };
@@ -253,7 +277,7 @@ export const Timeline = (parent, attrs) => {
       pinterface.destroy();
     });
 
-    dom.ap(node, title, sizer, body);
+    dom.ap(node, title, subtitle, sizer, body);
 
     resizer.on('Start', (w, h) => {
       undoStack.push(() => {
@@ -332,7 +356,10 @@ export const Timeline = (parent, attrs) => {
   const Lane = parent => {
     const events = Events();
 
-    let container = dom.cr('div', 'tl-lane tl-box-size tl-transition');
+    let container = dom.cr(
+      'div',
+      'tl-lane tl-box-size tl-transition-color tl-transition-opacity'
+    );
     let body = dom.cr('div', 'lane-body tl-box-size');
 
     let dropTarget = DropTarget(body, 'block block-move');
@@ -508,12 +535,18 @@ export const Timeline = (parent, attrs) => {
       }
     };
 
+    const collapse = () => {
+      // Set to minimum size
+      dom.style(container, {
+        height: '30px'
+      });
+      blocks.forEach(b => b.resizeBody());
+    };
+
     /////////////////////////////////////////////////////////////////////////////
 
     resizer.on('Done', () => {
-      blocks.forEach(b => {
-        b.resizeBody();
-      });
+      blocks.forEach(b => b.resizeBody());
     });
 
     dropTarget.on('Drop', (payload, type, e) => {
@@ -532,6 +565,7 @@ export const Timeline = (parent, attrs) => {
     }
 
     exports = {
+      collapse,
       recalcBottomBlock: recalcBottomBlock,
       removeBlock: removeBlock,
       destroy: destroy,
@@ -559,11 +593,21 @@ export const Timeline = (parent, attrs) => {
   };
 
   const resize = () => {
-    let size = dom.size(container);
+    let size = dom.size(parent);
+    let heightOffset = 0;
+
+    if (controls) {
+      heightOffset = dom.size(controlContainer).h;
+    }
+
+    dom.style(container, {
+      width: size.w + 'px',
+      height: size.h + 'px'
+    });
 
     dom.style(laneBox, {
       width: size.w + 'px',
-      height: size.h - dom.size(timeContainer).h + 'px'
+      height: size.h - heightOffset - dom.size(timeContainer).h + 'px'
     });
 
     dom.style(timeContainer, {
@@ -576,7 +620,7 @@ export const Timeline = (parent, attrs) => {
   };
 
   const addLane = () => {
-    let l = Lane(laneBox, 'Lane ' + i); // eslint-disable-line block-scoped-var
+    let l = Lane(laneBox, 'Lane ' + lanes.length + 2); // eslint-disable-line block-scoped-var
     lanes.push(l);
     events.emit('AddLane', l);
     return l;
@@ -612,7 +656,7 @@ export const Timeline = (parent, attrs) => {
     }
   };
 
-  const setTime = (t, callout) => {
+  const setTime = t => {
     // Need to scroll + set marker position
     currentTime = t;
     setMarker(t);
@@ -721,7 +765,7 @@ export const Timeline = (parent, attrs) => {
   };
 
   const calcStart = () => {
-    startTime = 500000;
+    startTime = Number.MAX_VALUE;
     lanes.forEach(function(lane) {
       if (lane.count() > 0) {
         if (lane.getBlock(0).start < startTime) {
@@ -729,6 +773,14 @@ export const Timeline = (parent, attrs) => {
         }
       }
     });
+
+    if (startTime === Number.MAX_VALUE) {
+      startTime = 0;
+    }
+  };
+
+  const collapseAll = () => {
+    lanes.forEach(l => l.collapse());
   };
 
   function calcEnd() {
@@ -741,6 +793,10 @@ export const Timeline = (parent, attrs) => {
         }
       }
     });
+
+    if (stopTime === 0) {
+      stopTime = 2000;
+    }
   }
 
   function calcStartEnd() {
@@ -771,7 +827,12 @@ export const Timeline = (parent, attrs) => {
 
   /////////////////////////////////////////////////////////////////////////////
 
-  dom.ap(container, timeMarker, timeContainer, laneBox);
+  dom.ap(
+    container,
+    controlContainer,
+    timeContainer,
+    dom.ap(laneBox, dom.ap(timeMarker, dom.cr('div', 'tl-time-marker-handle')))
+  );
 
   // Create some lanes
   for (let i = 0; i < properties.initialLanes; i++) {
@@ -787,7 +848,7 @@ export const Timeline = (parent, attrs) => {
   }
 
   dom.on(timeContainer, 'click', function(e) {
-    setTime((e.clientX + laneBox.scrollLeft) * zoomFactor);
+    setTime((e.clientX + laneBox.scrollLeft - 2) * zoomFactor);
   });
 
   dom.on(laneBox, 'scroll', function() {
@@ -795,11 +856,9 @@ export const Timeline = (parent, attrs) => {
     setMarker(currentTime);
   });
 
-  resize();
-  zoom(1);
-
   // Public interface
-  return {
+  exports = {
+    collapseAll,
     lane: getLane,
     on: events.on,
     forEachLane: forEachLane,
@@ -836,6 +895,16 @@ export const Timeline = (parent, attrs) => {
       return selectedBlock ? selectedBlock.block : false;
     }
   };
+
+  if (properties.showControls) {
+    controls = Controls(exports, controlContainer);
+  }
+
+  resize();
+  zoom(10);
+  setTime(0);
+
+  return exports;
 };
 
 export default Timeline;
